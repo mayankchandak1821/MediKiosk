@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "MediKiosk (SIH26047) API Collection",
+    "description": "Postman Collection for MediKiosk Flask Backend APIs (Patient ABHA, Vitals Stream, OCR, Triage, and ABDM FHIR Export).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "2. Ingest Hardware Vitals",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"temperature_c\": 39.4,\n  \"heart_rate_bpm\": 110,\n  \"spo2_percent\": 87,\n  \"respiratory_rate\": 22,\n  \"source\": \"USB Thermometer / Pulse Ox\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/vitals",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "vitals"]
+        }
+      }
+    },
+    {
+      "name": "3. Fetch Latest Cached Vitals",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/vitals/latest",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "vitals", "latest"]
+        }
+      }
+    },
+    {
+      "name": "4. Patient ABHA Auth & Registration",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"abha_id\": \"91-8840-2910-4491\",\n  \"full_name\": \"Rajesh Verma\",\n  \"gender\": \"Male\",\n  \"phone_number\": \"9876543210\",\n  \"preferred_language\": \"hi\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/patients",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "patients"]
+        }
+      }
+    },
+    {
+      "name": "5. Medical Document OCR Extraction",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"doc_type\": \"prescription\",\n  \"raw_text\": \"Tab Metformin 500mg 1-0-1, Tab Telmisartan 40mg 1-0-0\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/ocr/scan",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "ocr", "scan"]
+        }
+      }
+    },
+    {
+      "name": "6. Submit Clinical Encounter & FHIR Export",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"patient\": {\n    \"abha_id\": \"91-8840-2910-4491\",\n    \"full_name\": \"Rajesh Verma\",\n    \"gender\": \"Male\"\n  },\n  \"careMode\": \"allopathy\",\n  \"symptomCategory\": \"Chest Pain / Pressure\",\n  \"answers\": {\n    \"site\": \"chest_left\",\n    \"character\": \"pressure_squeezing\",\n    \"radiation\": \"to_arm_jaw\",\n    \"associations\": [\"shortness_of_breath\", \"cold_sweats\"],\n    \"severity\": 8\n  },\n  \"vitals\": {\n    \"temperature_c\": 38.2,\n    \"heart_rate_bpm\": 124,\n    \"spo2_percent\": 88\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/encounters",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "encounters"]
+        }
+      }
+    },
+    {
+      "name": "7. Fetch OPD Doctor Queue",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/encounters",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "encounters"]
+        }
+      }
+    },
+    {
+      "name": "8. Bhashini Multilingual Speech API Proxy",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"audio_base64\": \"UklGRi...\",\n  \"language\": \"hi\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/voice/bhashini",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "voice", "bhashini"]
+        }
+      }
+    }
+  ]
+}

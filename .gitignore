@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+backend/.venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Environment & Config
+.env
+.env.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+medikiosk.db
+
+# Build & Dist
+dist/
+build/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs & System
+*.log
+scratch/
+rendered_share.html
