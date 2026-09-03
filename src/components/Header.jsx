@@ -55,7 +55,7 @@ export default function Header({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-              MediKiosk <span className="text-teal-400 text-xs px-2 py-0.5 rounded border border-teal-500/30 bg-teal-500/10">SIH26047</span>
+              MediKiosk
             </h1>
           </div>
           <p className="text-xs text-slate-400 font-medium">AI Clinical Intake & Vitals Platform (Ministry of Ayush / AIIA)</p>
