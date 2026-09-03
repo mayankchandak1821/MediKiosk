@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Stethoscope, AlertTriangle, CheckCircle2, FileCode, User, Heart, 
+  Stethoscope, AlertTriangle, CheckCircle2, User, Heart, 
   Activity, Clock, ChevronRight, FileText, Download, ShieldCheck, Search, 
   Sparkles, Pill, AlertCircle, ShieldAlert, FileSearch, ArrowRight, Printer, Filter, UserX, Power, GitCompare, Eye
 } from 'lucide-react';
@@ -15,7 +15,6 @@ export default function DoctorDashboard({
   opdSessionNumber = 1,
   setOpdSessionNumber
 }) {
-  const [showFhirJson, setShowFhirJson] = useState(false);
   const [showDocOcrText, setShowDocOcrText] = useState(false);
   const [doctorNotes, setDoctorNotes] = useState('');
   const [signedOffMap, setSignedOffMap] = useState({});
@@ -41,18 +40,6 @@ export default function DoctorDashboard({
   }, [activeEncounter, filteredQueue, setActiveEncounter]);
 
   const selected = activeEncounter || filteredQueue[0];
-
-  const downloadFhirJson = () => {
-    if (!selected || !selected.fhirPayload) return;
-    const jsonStr = JSON.stringify(selected.fhirPayload, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ABDM_FHIR_${selected.patient?.abha_id || 'PATIENT'}_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   // Toggle Doctor Availability & Count Session
   const toggleDoctorAvailability = () => {
@@ -350,21 +337,6 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                     <Eye className="w-4 h-4 text-teal-400" />
                     {showDocOcrText ? 'Hide Document Text' : 'View Prescription Text'}
                   </button>
-
-                  <button
-                    onClick={() => setShowFhirJson(!showFhirJson)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors border border-slate-700"
-                  >
-                    <FileCode className="w-4 h-4 text-cyan-400" />
-                    {showFhirJson ? 'Hide FHIR Payload' : 'View FHIR R4 JSON'}
-                  </button>
-
-                  <button
-                    onClick={downloadFhirJson}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs font-bold rounded-lg transition-colors"
-                  >
-                    <Download className="w-4 h-4" /> Download FHIR
-                  </button>
                 </div>
               </div>
 
@@ -527,19 +499,6 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                   ))}
                 </div>
               </div>
-
-              {/* FHIR JSON Viewer Toggle */}
-              {showFhirJson && (
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-mono text-cyan-400 font-bold">ABDM HL7 FHIR R4 Standard Payload</span>
-                    <span className="text-[10px] text-slate-500">Resource: Bundle (document)</span>
-                  </div>
-                  <pre className="p-3 rounded-lg bg-slate-900 text-slate-300 font-mono text-[11px] max-h-60 overflow-y-auto border border-slate-800">
-                    {JSON.stringify(selected.fhirPayload, null, 2)}
-                  </pre>
-                </div>
-              )}
 
               {/* Vitals Summary Card */}
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
