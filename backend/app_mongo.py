@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 from pymongo import MongoClient
+
 from PIL import Image
 import io
 import base64
@@ -220,7 +221,7 @@ def approve_encounter(enc_id):
 
 @app.route('/api/ocr/scan', methods=['POST'])
 def ocr_scan():
-    """Python Real PDF & Image OCR API Endpoint."""
+    """Python Real PDF, Written Notes & Image OCR API Endpoint."""
     try:
         extracted_text = ""
 
@@ -240,16 +241,38 @@ def ocr_scan():
             else:
                 # Process image file
                 img = Image.open(file.stream)
-                extracted_text = f"Scanned Image File ({img.width}x{img.height}px)"
+                try:
+                    import pytesseract
+                    from PIL import ImageEnhance
+                    img_gray = img.convert('L')
+                    enhancer = ImageEnhance.Contrast(img_gray)
+                    img_enhanced = enhancer.enhance(2.0)
+                    extracted_text = pytesseract.image_to_string(img_enhanced, config='--psm 6')
+                    if not extracted_text.strip():
+                        extracted_text = pytesseract.image_to_string(img_enhanced)
+                except Exception:
+                    extracted_text = f"Scanned Image File ({img.width}x{img.height}px)"
 
-        elif request.json and 'image_base64' in request.json:
-            b64_str = request.json['image_base64'].split(',')[-1]
+        elif (request.json and 'image_base64' in request.json) or (request.form and 'image_base64' in request.form):
+            b64_val = (request.json or {}).get('image_base64') or request.form.get('image_base64')
+            b64_str = b64_val.split(',')[-1]
             img_data = base64.b64decode(b64_str)
             img = Image.open(io.BytesIO(img_data))
-            extracted_text = f"Captured Camera Snapshot ({img.width}x{img.height}px)"
+            try:
+                import pytesseract
+                from PIL import ImageEnhance
+                img_gray = img.convert('L')
+                enhancer = ImageEnhance.Contrast(img_gray)
+                img_enhanced = enhancer.enhance(2.0)
+                extracted_text = pytesseract.image_to_string(img_enhanced, config='--psm 6')
+                if not extracted_text.strip():
+                    extracted_text = pytesseract.image_to_string(img_enhanced)
+            except Exception:
+                extracted_text = f"Captured Camera Snapshot ({img.width}x{img.height}px)"
 
-        elif request.json and 'text' in request.json:
-            extracted_text = request.json['text']
+        elif (request.json and ('raw_text' in request.json or 'text' in request.json)) or (request.form and ('raw_text' in request.form or 'text' in request.form)):
+            req_data = request.json or request.form
+            extracted_text = req_data.get('raw_text') or req_data.get('text', '')
 
         # Parse extracted text using Medical NLP Engine
         parsed_result = parse_medical_text(extracted_text)

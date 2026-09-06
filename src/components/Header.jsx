@@ -1,46 +1,49 @@
 import React from 'react';
-import { Activity, Stethoscope, Cpu, Globe, UserCheck, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Activity, Stethoscope, Globe, ShieldCheck, Sliders, User, LogOut, Key } from 'lucide-react';
 
 export default function Header({ 
-  activeView, 
-  setActiveView, 
+  activeRole, 
+  currentUser,
   language, 
   setLanguage, 
-  connectionState, 
-  activeSource, 
   currentVitals,
-  openHardwareModal
+  openHardwareModal,
+  onOpenLogin
 }) {
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'hi', name: 'हिन्दी (Hindi)' },
     { code: 'ta', name: 'தமிழ் (Tamil)' },
     { code: 'te', name: 'తెలుగు (Telugu)' },
-    { code: 'mr', name: 'मराठी (Marathi)' },
+    { code: 'mr', name: 'मরাठी (Marathi)' },
     { code: 'bn', name: 'বাংলা (Bengali)' }
   ];
 
-  const getStatusBadge = () => {
-    if (connectionState === 'connected') {
+  const getRoleBadge = () => {
+    if (activeRole === 'login') {
       return (
-        <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-full animate-pulse">
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          Hardware: {activeSource.toUpperCase()}
+        <span className="flex items-center gap-1.5 px-3 py-1 bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-bold rounded-full">
+          <Key className="w-3.5 h-3.5" /> Portal Sign In
         </span>
       );
     }
-    if (connectionState === 'simulating') {
+    if (activeRole === 'patient') {
       return (
-        <span className="flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold rounded-full">
-          <Cpu className="w-3.5 h-3.5" />
-          Hardware: SIMULATOR
+        <span className="flex items-center gap-1.5 px-3 py-1 bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-bold rounded-full">
+          <User className="w-3.5 h-3.5" /> Patient: {currentUser?.name || 'Rajesh Verma'}
+        </span>
+      );
+    }
+    if (activeRole === 'doctor') {
+      return (
+        <span className="flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold rounded-full">
+          <Stethoscope className="w-3.5 h-3.5" /> Doctor OPD Portal
         </span>
       );
     }
     return (
-      <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold rounded-full">
-        <Activity className="w-3.5 h-3.5" />
-        Hardware: STANDBY
+      <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-bold rounded-full">
+        <ShieldCheck className="w-3.5 h-3.5" /> System Admin Portal
       </span>
     );
   };
@@ -57,38 +60,13 @@ export default function Header({
             <h1 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
               MediKiosk
             </h1>
+            {getRoleBadge()}
           </div>
           <p className="text-xs text-slate-400 font-medium">AI Clinical Intake & Vitals Platform (Ministry of Ayush / AIIA)</p>
         </div>
       </div>
 
-      {/* View Switcher Tabs */}
-      <div className="flex items-center p-1 bg-slate-950/60 rounded-xl border border-slate-800/80">
-        <button
-          onClick={() => setActiveView('kiosk')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-            activeView === 'kiosk'
-              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-slate-950 shadow-md'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-          }`}
-        >
-          <UserCheck className="w-4 h-4" />
-          Patient Kiosk Interface
-        </button>
-        <button
-          onClick={() => setActiveView('doctor')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-            activeView === 'doctor'
-              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-slate-950 shadow-md'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-          }`}
-        >
-          <Stethoscope className="w-4 h-4" />
-          Doctor OPD Dashboard
-        </button>
-      </div>
-
-      {/* Right Controls: Vitals Bar, Language, Hardware Toggle */}
+      {/* Right Controls: Vitals Bar, Language, Vitals Modal, Login / Switch Role Button */}
       <div className="flex items-center gap-3">
         {/* Quick Vitals Readout */}
         <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-slate-950/80 border border-slate-800 text-xs font-mono">
@@ -103,13 +81,14 @@ export default function Header({
           </span>
         </div>
 
-        {/* Hardware Status Button */}
+        {/* Vitals Modal Trigger Button */}
         <button
           onClick={openHardwareModal}
-          className="hover:opacity-90 transition-opacity cursor-pointer"
-          title="Configure Hardware Connection & Sensor Simulation"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-bold rounded-full hover:bg-teal-500/20 transition-all cursor-pointer"
+          title="Customize Vitals Parameters"
         >
-          {getStatusBadge()}
+          <Sliders className="w-3.5 h-3.5" />
+          Vitals
         </button>
 
         {/* Language Selector */}
@@ -127,6 +106,17 @@ export default function Header({
             ))}
           </select>
         </div>
+
+        {/* Switch Role / Login Portal Button */}
+        {activeRole !== 'login' && (
+          <button
+            onClick={onOpenLogin}
+            className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 flex items-center gap-1.5 transition-colors shadow"
+          >
+            <LogOut className="w-3.5 h-3.5 text-teal-400" />
+            <span>Switch Role / Login</span>
+          </button>
+        )}
       </div>
     </header>
   );

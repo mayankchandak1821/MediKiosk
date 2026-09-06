@@ -11,10 +11,12 @@ import VisualBodyMap from './VisualBodyMap';
 import VisualPainScale from './VisualPainScale';
 import VisualVitalsGauges from './VisualVitalsGauges';
 import VisualDocumentScanner from './VisualDocumentScanner';
+import ClinicalDecisionTreeWizard from './ClinicalDecisionTreeWizard';
+import { decisionTreeEngine } from '../services/decisionTreeEngine';
 
-export default function KioskIntake({ currentVitals, onEncounterSubmit, language, isDoctorAvailable = true, opdSessionNumber = 1 }) {
+export default function KioskIntake({ currentVitals, onEncounterSubmit, language, isDoctorAvailable = true, opdSessionNumber = 1, initialStep = 2 }) {
   // Step State: 1 = Patient Auth / Sign Up, 2 = Multimodal Voice & Touch Intake, 3 = Medical Document OCR, 4 = Review & Submit
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(initialStep);
 
   // Auth Mode: 'login' | 'signup'
   const [authTab, setAuthTab] = useState('login');
@@ -59,6 +61,15 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
     ahara_vihara: ['regular_diet']
   });
 
+  // Clinical Decision Tree State
+  const [treeAnswers, setTreeAnswers] = useState({
+    chest_character: 'crushing_pressure',
+    chest_radiation: 'rad_arm_jaw_neck',
+    chest_triggers: 'trig_exertion',
+    chest_associated: ['assoc_sweating', 'assoc_dyspnea'],
+    chest_risk_history: ['hx_cad', 'hx_htn']
+  });
+
   // Voice AI Recognition State
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
@@ -67,8 +78,11 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
   // Document OCR State
   const [scannedDoc, setScannedDoc] = useState(SAMPLE_OCR_TEMPLATES[0].extracted);
 
-  // Evaluate Triage Realtime
-  const triage = clinicalEngine.evaluateTriage(answers, currentVitals);
+  // Evaluate Decision Tree & Triage Realtime
+  const decisionTreeEval = decisionTreeEngine.evaluateChestPainTree(treeAnswers, currentVitals);
+  const triage = selectedCategory === 'chest_pain' && decisionTreeEval.isRedFlag
+    ? { priority: decisionTreeEval.priority, isRedFlag: true, riskPercentage: decisionTreeEval.riskPercentage, riskLevel: 'HIGH_CRITICAL', redFlags: decisionTreeEval.redFlags }
+    : clinicalEngine.evaluateTriage(answers, currentVitals);
 
   // Reset to Routine Checkup Defaults
   const applyRoutineCheckupDefaults = () => {
@@ -210,6 +224,8 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
       careMode,
       symptomCategory: selectedCategory === 'routine_checkup' ? 'Routine OPD General Checkup' : SYMPTOM_CATEGORIES.find(c => c.id === selectedCategory)?.name,
       answers,
+      treeAnswers,
+      decisionTreeEval,
       vitals: currentVitals,
       triage,
       scannedDoc,
@@ -664,14 +680,23 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </div>
           </div>
 
-          {/* Vitals Telemetry Gauges with Live Triage Risk Score */}
-          <VisualVitalsGauges vitals={currentVitals} answers={answers} activeSource="Peripheral Sensors" />
-
-          {/* Anatomical Body Map */}
+          {/* 1. Pictorial Zoomable Anatomical Body Map (Primary Navigation) */}
           <VisualBodyMap
             selectedSite={answers.site}
             onSelectSite={(siteId) => setAnswers({ ...answers, site: siteId })}
+            onSelectCategory={(catId) => setSelectedCategory(catId)}
           />
+
+          {/* 2. DYNAMIC DECISION TREE QUESTIONNAIRE CARDS BELOW ZOOMED BODY MAP */}
+          <ClinicalDecisionTreeWizard
+            category={selectedCategory}
+            vitals={currentVitals}
+            treeAnswers={treeAnswers}
+            onTreeAnswersChange={(updatedTreeAnswers) => setTreeAnswers(updatedTreeAnswers)}
+          />
+
+          {/* Vitals Telemetry Gauges with Live Triage Risk Score */}
+          <VisualVitalsGauges vitals={currentVitals} answers={answers} activeSource="Peripheral Sensors" />
 
           {/* Wong-Baker Pain Scale */}
           <VisualPainScale

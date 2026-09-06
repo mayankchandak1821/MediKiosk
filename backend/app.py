@@ -169,28 +169,74 @@ def register_or_get_patient():
 
 @app.route('/api/ocr/scan', methods=['POST'])
 def process_ocr_document():
-    """OCR entity extraction from uploaded paper prescription or lab report."""
-    data = request.json or {}
-    raw_text = data.get("raw_text", "")
-    doc_type = data.get("doc_type", "prescription")
+    """OCR entity extraction from uploaded paper prescription, written notes, or lab report."""
+    try:
+        extracted_text = ""
 
-    extracted = {
-        "docType": "Prescription" if doc_type == "prescription" else "Pathology Lab Report",
-        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "medications": [
-            {"name": "Metformin", "dosage": "500mg", "frequency": "Twice daily (1-0-1)", "duration": "30 days", "status": "ACTIVE"},
-            {"name": "Telmisartan", "dosage": "40mg", "frequency": "Once daily (1-0-0)", "duration": "30 days", "status": "ACTIVE"}
-        ],
-        "investigations": [
-            {"testName": "Fasting Blood Sugar (FBS)", "value": "168 mg/dL", "refRange": "70-100 mg/dL", "isAbnormal": True, "flag": "HIGH"},
-            {"testName": "HbA1c", "value": "8.8 %", "refRange": "4.0-5.6 %", "isAbnormal": True, "flag": "HIGH"}
-        ]
-    }
+        # 1. Process File Upload (PDF or Image)
+        if 'file' in request.files:
+            file = request.files['file']
+            filename = file.filename.lower()
 
-    return jsonify({
-        "success": True,
-        "extracted": extracted
-    }), 200
+            if filename.endswith('.pdf'):
+                import pypdf
+                reader = pypdf.PdfReader(file.stream)
+                runs = []
+                for page in reader.pages:
+                    txt = page.extract_text()
+                    if txt: runs.append(txt)
+                extracted_text = "\n".join(runs)
+            else:
+                img = Image.open(file.stream)
+                try:
+                    import pytesseract
+                    from PIL import ImageEnhance
+                    img_gray = img.convert('L')
+                    enhancer = ImageEnhance.Contrast(img_gray)
+                    img_enhanced = enhancer.enhance(2.0)
+                    extracted_text = pytesseract.image_to_string(img_enhanced, config='--psm 6')
+                    if not extracted_text.strip():
+                        extracted_text = pytesseract.image_to_string(img_enhanced)
+                except Exception:
+                    extracted_text = f"Scanned Image File ({img.width}x{img.height}px)"
+
+        # 2. Process Base64 Image from Camera Snapshot (JSON or Form Data)
+        elif (request.json and 'image_base64' in request.json) or (request.form and 'image_base64' in request.form):
+            b64_val = (request.json or {}).get('image_base64') or request.form.get('image_base64')
+            b64_str = b64_val.split(',')[-1]
+            img_data = base64.b64decode(b64_str)
+            img = Image.open(io.BytesIO(img_data))
+            try:
+                import pytesseract
+                from PIL import ImageEnhance
+                img_gray = img.convert('L')
+                enhancer = ImageEnhance.Contrast(img_gray)
+                img_enhanced = enhancer.enhance(2.0)
+                extracted_text = pytesseract.image_to_string(img_enhanced, config='--psm 6')
+                if not extracted_text.strip():
+                    extracted_text = pytesseract.image_to_string(img_enhanced)
+            except Exception:
+                extracted_text = f"Captured Camera Snapshot ({img.width}x{img.height}px)"
+
+        # 3. Process Raw Text input
+        elif (request.json and ('raw_text' in request.json or 'text' in request.json)) or (request.form and ('raw_text' in request.form or 'text' in request.form)):
+            req_data = request.json or request.form
+            extracted_text = req_data.get('raw_text') or req_data.get('text', '')
+
+        # Parse extracted text using Medical NLP Engine
+        from ocr_parser import parse_medical_text
+        parsed_result = parse_medical_text(extracted_text)
+
+        return jsonify({
+            "success": True,
+            "docType": parsed_result["docType"],
+            "rawText": extracted_text,
+            "extracted": parsed_result
+        }), 200
+
+    except Exception as err:
+        print("OCR Scan Route Error:", err)
+        return jsonify({"success": False, "error": str(err)}), 500
 
 # --- 4. CLINICAL ENCOUNTER, TRIAGE & ABDM FHIR BUNDLE ---
 

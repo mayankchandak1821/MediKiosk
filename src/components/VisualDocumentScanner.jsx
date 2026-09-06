@@ -81,12 +81,18 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
       setIsCameraActive(false);
     }
 
-    setIsScanning(true);
-    setOcrProgress(10);
-    const data = await ocrEngine.processDocumentImage(dataUrl, null, (prog) => setOcrProgress(prog));
-    if (data?.rawText) setManualText(data.rawText);
-    onDocScan(data);
-    setIsScanning(false);
+    try {
+      setIsScanning(true);
+      setOcrProgress(10);
+      const data = await ocrEngine.processDocumentImage(dataUrl, null, (prog) => setOcrProgress(prog));
+      if (data?.rawText) setManualText(data.rawText);
+      onDocScan(data);
+    } catch (err) {
+      console.error("Camera scan error:", err);
+    } finally {
+      setIsScanning(false);
+      setOcrProgress(100);
+    }
   };
 
   // Handle File Upload Scanning (PDF or Image)
@@ -94,26 +100,36 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
     const file = event.target.files[0];
     if (!file) return;
 
-    setIsScanning(true);
-    setOcrProgress(10);
+    try {
+      setIsScanning(true);
+      setOcrProgress(10);
 
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        setCapturedImage(e.target.result);
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          setCapturedImage(e.target.result);
+          try {
+            const data = await ocrEngine.processDocumentImage(file, null, (prog) => setOcrProgress(prog));
+            if (data?.rawText) setManualText(data.rawText);
+            onDocScan(data);
+          } finally {
+            setIsScanning(false);
+            setOcrProgress(100);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // PDF or non-image document file
+        setCapturedImage(null);
         const data = await ocrEngine.processDocumentImage(file, null, (prog) => setOcrProgress(prog));
         if (data?.rawText) setManualText(data.rawText);
         onDocScan(data);
-        setIsScanning(false);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // PDF or non-image document file
-      setCapturedImage(null);
-      const data = await ocrEngine.processDocumentImage(file, null, (prog) => setOcrProgress(prog));
-      if (data?.rawText) setManualText(data.rawText);
-      onDocScan(data);
+      }
+    } catch (err) {
+      console.error("File upload OCR error:", err);
+    } finally {
       setIsScanning(false);
+      setOcrProgress(100);
     }
   };
 
@@ -121,21 +137,31 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
   const handleScanPreset = async (preset) => {
     setActivePreset(preset);
     setCapturedImage(null);
-    setIsScanning(true);
-    setOcrProgress(50);
-    const data = await ocrEngine.processDocumentImage(null, preset.id);
-    if (data?.rawText) setManualText(data.rawText);
-    onDocScan(data);
-    setIsScanning(false);
+    try {
+      setIsScanning(true);
+      setOcrProgress(50);
+      const data = await ocrEngine.processDocumentImage(null, preset.id);
+      if (data?.rawText) setManualText(data.rawText);
+      onDocScan(data);
+    } catch (err) {
+      console.error("Preset scan error:", err);
+    } finally {
+      setIsScanning(false);
+      setOcrProgress(100);
+    }
   };
 
   // Parse Manually Typed / Edited Text
   const handleParseManualText = () => {
     if (!manualText.trim()) return;
-    setIsScanning(true);
-    const data = ocrEngine.transformRawTextToEntities(manualText);
-    onDocScan(data);
-    setIsScanning(false);
+    try {
+      setIsScanning(true);
+      const data = ocrEngine.transformRawTextToEntities(manualText);
+      onDocScan(data);
+    } finally {
+      setIsScanning(false);
+      setOcrProgress(100);
+    }
   };
 
   const handleRetake = () => {
@@ -350,8 +376,64 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
                 <span className="font-bold text-sm text-teal-300 flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" /> {scannedDoc.docType} Digitized Entities
                 </span>
-                <span className="text-xs text-slate-400 font-mono">Date: {scannedDoc.date}</span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[11px] font-mono font-bold">
+                    ⚡ {scannedDoc.confidenceScore || 90}% AI Confidence
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">Date: {scannedDoc.date}</span>
+                </div>
               </div>
+
+              {/* Extracted Vitals Written on Paper */}
+              {scannedDoc.vitalsFromDoc && Object.keys(scannedDoc.vitalsFromDoc).length > 0 && (
+                <div className="space-y-2 p-3 bg-teal-950/30 border border-teal-500/20 rounded-xl">
+                  <span className="text-xs font-bold text-teal-300 uppercase tracking-wider block flex items-center gap-1.5">
+                    🩺 Extracted Vitals (Written on Document)
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                    {scannedDoc.vitalsFromDoc.blood_pressure && (
+                      <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                        <span className="text-slate-400 block text-[10px]">Blood Pressure</span>
+                        <span className="font-bold text-teal-300">{scannedDoc.vitalsFromDoc.blood_pressure}</span>
+                      </div>
+                    )}
+                    {scannedDoc.vitalsFromDoc.pulse_rate && (
+                      <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                        <span className="text-slate-400 block text-[10px]">Pulse Rate</span>
+                        <span className="font-bold text-teal-300">{scannedDoc.vitalsFromDoc.pulse_rate}</span>
+                      </div>
+                    )}
+                    {scannedDoc.vitalsFromDoc.spo2_percent && (
+                      <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                        <span className="text-slate-400 block text-[10px]">Oxygen (SpO2)</span>
+                        <span className="font-bold text-teal-300">{scannedDoc.vitalsFromDoc.spo2_percent}</span>
+                      </div>
+                    )}
+                    {scannedDoc.vitalsFromDoc.temperature && (
+                      <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                        <span className="text-slate-400 block text-[10px]">Temperature</span>
+                        <span className="font-bold text-teal-300">{scannedDoc.vitalsFromDoc.temperature}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Extracted Written Clinical Notes & Doctor Advice */}
+              {scannedDoc.clinicalNotes?.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+                    Written Clinical Notes & OPD Impressions
+                  </span>
+                  <div className="space-y-1.5">
+                    {scannedDoc.clinicalNotes.map((note, idx) => (
+                      <div key={idx} className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 font-medium">
+                        📝 {note}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Extracted Active Medications */}
               {scannedDoc.medications?.length > 0 ? (

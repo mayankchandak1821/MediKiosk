@@ -444,6 +444,48 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                 </div>
               </div>
 
+              {/* CLINICAL DECISION TREE DIFFERENTIAL DIAGNOSIS CARD */}
+              {selected.decisionTreeEval && (
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-rose-500/30 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        <Heart className="w-4 h-4" />
+                      </span>
+                      <h4 className="font-extrabold text-sm text-slate-100">
+                        Clinical Decision Tree & Differential Diagnosis Probability
+                      </h4>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-300 font-bold uppercase">
+                      {selected.decisionTreeEval.riskPercentage}% Ischemic Risk
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {selected.decisionTreeEval.differentials?.map((diff, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-3 text-xs font-mono">
+                        <div>
+                          <span className="font-bold text-slate-200 block">{diff.name}</span>
+                          <span className="text-[10px] text-slate-400">Recommended Action: {diff.action}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className={`font-bold text-sm ${diff.probability >= 50 ? 'text-rose-400' : diff.probability >= 25 ? 'text-amber-400' : 'text-teal-400'}`}>
+                            {diff.probability}%
+                          </span>
+                          <span className="text-[10px] block text-slate-400">{diff.riskLevel}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {selected.decisionTreeEval.recommendation && (
+                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-200 font-medium">
+                      🩺 <strong>Physician Recommendation:</strong> {selected.decisionTreeEval.recommendation}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* RAW PRESCRIPTION OCR TEXT VIEWER */}
               {showDocOcrText && (
                 <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
