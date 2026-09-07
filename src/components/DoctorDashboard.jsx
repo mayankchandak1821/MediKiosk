@@ -13,20 +13,65 @@ export default function DoctorDashboard({
   isDoctorAvailable = true,
   setIsDoctorAvailable,
   opdSessionNumber = 1,
-  setOpdSessionNumber
+  setOpdSessionNumber,
+  currentUser
 }) {
   const [showDocOcrText, setShowDocOcrText] = useState(false);
   const [doctorNotes, setDoctorNotes] = useState('');
   const [signedOffMap, setSignedOffMap] = useState({});
   const [queueFilter, setQueueFilter] = useState('all'); // 'all' | 'active' | 'signed_off'
+  
+  // Doctor Department Specialty ('ayush' | 'allopathy')
+  const defaultSpecialty = currentUser?.specialty || (currentUser?.role?.toLowerCase().includes('ayush') ? 'ayush' : 'allopathy');
+  const [deptFilter, setDeptFilter] = useState(defaultSpecialty);
+
+  // Sync deptFilter if logged-in doctor changes
+  useEffect(() => {
+    if (currentUser?.specialty) {
+      setDeptFilter(currentUser.specialty);
+    }
+  }, [currentUser]);
+
+  // Deduplicate & Department-Filter Queue:
+  // 1. Suppress redundant routine checkups if an actual case card exists
+  // 2. Separate AYUSH Ayurvedic doctor queue from Allopathic doctor queue based on deptFilter
+  const deptFilteredQueue = encounterQueue.filter(enc => {
+    if (deptFilter === 'ayush') {
+      return enc.careMode === 'ayush' || enc.symptomCategory?.toLowerCase().includes('ayush');
+    }
+    if (deptFilter === 'allopathy') {
+      return enc.careMode === 'allopathy' || !enc.careMode || !enc.symptomCategory?.toLowerCase().includes('ayush');
+    }
+    return true; // 'all'
+  });
+
+  const deduplicatedQueue = deptFilteredQueue.filter((enc, index, self) => {
+    const samePatientEncounters = self.filter(
+      e => (e.patient?.abha_id && e.patient?.abha_id === enc.patient?.abha_id) ||
+           (e.patient?.full_name && e.patient?.full_name === enc.patient?.full_name)
+    );
+    if (samePatientEncounters.length > 1) {
+      const hasActualCase = samePatientEncounters.some(
+        e => e.symptomCategory && 
+             !e.symptomCategory.toLowerCase().includes('routine') && 
+             e.symptomCategory !== 'Intake'
+      );
+      const isRoutine = enc.symptomCategory && 
+                        (enc.symptomCategory.toLowerCase().includes('routine') || enc.symptomCategory === 'Intake');
+      if (hasActualCase && isRoutine) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   // Calculate Session Metrics
-  const signedOffCount = encounterQueue.filter(e => e.status === 'COMPLETED_SIGNED_OFF' || signedOffMap[e.id]?.isSignedOff).length;
-  const waitingCount = encounterQueue.filter(e => e.status !== 'COMPLETED_SIGNED_OFF' && !signedOffMap[e.id]?.isSignedOff).length;
-  const redFlagCount = encounterQueue.filter(e => e.triage?.isRedFlag && e.status !== 'COMPLETED_SIGNED_OFF').length;
+  const signedOffCount = deduplicatedQueue.filter(e => e.status === 'COMPLETED_SIGNED_OFF' || signedOffMap[e.id]?.isSignedOff).length;
+  const waitingCount = deduplicatedQueue.filter(e => e.status !== 'COMPLETED_SIGNED_OFF' && !signedOffMap[e.id]?.isSignedOff).length;
+  const redFlagCount = deduplicatedQueue.filter(e => e.triage?.isRedFlag && e.status !== 'COMPLETED_SIGNED_OFF').length;
 
   // Filter Queue based on Tab Selection
-  const filteredQueue = encounterQueue.filter(enc => {
+  const filteredQueue = deduplicatedQueue.filter(enc => {
     const isSigned = enc.status === 'COMPLETED_SIGNED_OFF' || signedOffMap[enc.id]?.isSignedOff;
     if (queueFilter === 'active') return !isSigned;
     if (queueFilter === 'signed_off') return isSigned;
@@ -215,9 +260,37 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Patient OPD Queue List (4 Cols) */}
         <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl h-fit">
+          {/* OPD Department Queue Filter Tabs (AYUSH vs Allopathy) */}
+          <div className="p-1.5 bg-slate-950 rounded-xl border border-slate-800 flex items-center gap-1 text-[11px]">
+            <button
+              onClick={() => setDeptFilter('ayush')}
+              className={`flex-1 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                deptFilter === 'ayush' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              🌿 AYUSH Queue
+            </button>
+            <button
+              onClick={() => setDeptFilter('allopathy')}
+              className={`flex-1 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                deptFilter === 'allopathy' ? 'bg-cyan-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              🩺 Allopathy Queue
+            </button>
+            <button
+              onClick={() => setDeptFilter('all')}
+              className={`px-2 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                deptFilter === 'all' ? 'bg-slate-800 text-slate-100 shadow' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              All
+            </button>
+          </div>
+
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="font-bold text-sm text-slate-200 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-teal-400" /> OPD Live Queue
+              <Clock className="w-4 h-4 text-teal-400" /> {deptFilter === 'ayush' ? '🌿 AYUSH OPD Queue' : deptFilter === 'allopathy' ? '🩺 Allopathy OPD Queue' : 'OPD Live Queue'}
             </h3>
 
             <div className="flex items-center p-1 bg-slate-950 rounded-lg border border-slate-800 text-[10px]">

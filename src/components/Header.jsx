@@ -30,14 +30,17 @@ export default function Header({
     if (activeRole === 'patient') {
       return (
         <span className="flex items-center gap-1.5 px-3 py-1 bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-bold rounded-full">
-          <User className="w-3.5 h-3.5" /> Patient: {currentUser?.name || 'Rajesh Verma'}
+          <User className="w-3.5 h-3.5" /> Patient: {currentUser?.name || currentUser?.full_name || 'Patient'}
         </span>
       );
     }
     if (activeRole === 'doctor') {
+      const isAyush = currentUser?.specialty === 'ayush' || currentUser?.role?.toLowerCase().includes('ayush');
       return (
-        <span className="flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold rounded-full">
-          <Stethoscope className="w-3.5 h-3.5" /> Doctor OPD Portal
+        <span className={`flex items-center gap-1.5 px-3 py-1 border text-xs font-bold rounded-full ${
+          isAyush ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300'
+        }`}>
+          <Stethoscope className="w-3.5 h-3.5" /> {isAyush ? '🌿 AYUSH Vaidya OPD' : '🩺 Allopathy OPD'}: {currentUser?.name || 'Doctor'}
         </span>
       );
     }

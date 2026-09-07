@@ -204,31 +204,72 @@ export const DECISION_TREES = {
   },
   ayush_wellness: {
     id: 'ayush_wellness',
-    name: 'AYUSH Prakriti & Dashavidha Pariksha Decision Tree',
-    name_hi: 'आयुष एवं आयुर्वेदिक प्रकृति परीक्षण',
+    name: 'AYUSH 5-Step Diagnostic & Treatment Protocol Tree',
+    name_hi: 'आयुष एवं आयुर्वेदिक 5-चरणीय निदान व उपचार प्रक्रिया',
     steps: [
       {
         id: 'ayush_dosha',
-        title: 'Step 1: Dominant Body Constitution (Prakriti Pariksha)',
-        title_hi: 'चरण 1: आपकी मुख्य शारीरिक प्रकृति (त्रिदोष परीक्षण)',
-        subtitle: 'Ayurvedic tridosha assessment',
-        subtitle_hi: 'आयुर्वेदिक वात, पित्त, कफ प्रकृति निर्धारण',
+        title: 'Step 1: Prakriti Pariksha (Dominant Body Constitution)',
+        title_hi: 'चरण 1: प्रकृति एवं त्रिदोष परीक्षण (शारीरिक प्रकृति)',
+        subtitle: 'Baseline Ayurvedic Tridosha assessment (Vata, Pitta, Kapha)',
+        subtitle_hi: 'आयुर्वेदिक वात, पित्त, कफ एवं द्वंद्वज प्रकृति निर्धारण',
         options: [
           { id: 'vata_prakriti', label: 'Vata Dominant (Light build, dry skin, active mind, irregular digestion)', label_hi: 'वात प्रधान (हल्का शरीर, रूखी त्वचा, चंचल मन, अनिश्चित पाचन)', icon: 'Wind', weight: { vata: 60 } },
           { id: 'pitta_prakriti', label: 'Pitta Dominant (Medium build, warm body, strong digestion, sharp focus)', label_hi: 'पित्त प्रधान (मध्यम शरीर, गर्म त्वचा, तेज पाचन, एकाग्र बुद्धि)', icon: 'Flame', weight: { pitta: 60 } },
-          { id: 'kapha_prakriti', label: 'Kapha Dominant (Solid build, smooth skin, calm demeanor, steady endurance)', label_hi: 'कफ प्रधान (मजबूत शरीर, चिकनी त्वचा, शांत स्वभाव, सहनशीलता)', icon: 'User', weight: { kapha: 60 } }
+          { id: 'kapha_prakriti', label: 'Kapha Dominant (Solid build, smooth skin, calm demeanor, steady endurance)', label_hi: 'कफ प्रधान (मजबूत शरीर, चिकनी त्वचा, शांत स्वभाव, सहनशीलता)', icon: 'User', weight: { kapha: 60 } },
+          { id: 'dvandvaja_prakriti', label: 'Dvandvaja Prakriti (Dual Tridosha dominance - Vata-Pitta / Pitta-Kapha)', label_hi: 'द्वंद्वज प्रकृति (दो दोषों की प्रधानता - वात-पित्त / पित्त-कफ)', icon: 'Sparkles', weight: { balanced: 50 } }
         ]
       },
       {
         id: 'ayush_agni',
-        title: 'Step 2: Digestive Fire Capacity (Agni Pariksha)',
-        title_hi: 'चरण 2: जठराग्नि एवं पाचन क्षमता (अग्नि परीक्षण)',
-        subtitle: 'Metabolic capacity evaluation',
-        subtitle_hi: 'पाचन एवं चयापचय क्षमता का परीक्षण',
+        title: 'Step 2: Agni & Koshtha Pariksha (Digestive Fire & Bowel)',
+        title_hi: 'चरण 2: अग्नि एवं कोष्ठ परीक्षण (जठराग्नि व पेट सफाई)',
+        subtitle: 'Metabolic capacity & bowel elimination pattern',
+        subtitle_hi: 'पाचन अग्नि क्षमता एवं कोष्ठ की प्रकृति',
         options: [
-          { id: 'samagni', label: 'Sama Agni (Normal, smooth digestion without acidity or bloating)', label_hi: 'सम अग्नि (सामान्य, सुचारू पाचन, बिना एसिडिटी के)', icon: 'CheckCircle2', weight: { balanced: 50 } },
-          { id: 'mandagni', label: 'Manda Agni (Sluggish digestion, heaviness after meals, low appetite)', label_hi: 'मंद अग्नि (धीमी पाचन शक्ति, खाने के बाद भारीपन, कम भूख)', icon: 'Activity', weight: { kapha: 35 } },
-          { id: 'tikshnagni', label: 'Tikshna Agni (Hyperactive digestion, frequent burning hunger, heartburn)', label_hi: 'तीक्ष्ण अग्नि (अत्यधिक तीव्र भूख, सीने में जलन, तेज तेजाबियत)', icon: 'Flame', weight: { pitta: 45 } }
+          { id: 'samagni_madhyama', label: 'Sama Agni & Madhyama Koshtha (Balanced digestion, comfortable daily bowel)', label_hi: 'सम अग्नि एवं मध्यम कोष्ठ (संतुलित पाचन, नियमित व सुचारू पेट सफाई)', icon: 'CheckCircle2', weight: { balanced: 50 } },
+          { id: 'mandagni_krura', label: 'Manda Agni & Krura Koshtha (Sluggish digestion, heaviness, hard constipation)', label_hi: 'मंद अग्नि एवं क्रूर कोष्ठ (धीमी पाचन शक्ति, भोजन बाद भारीपन, कड़ा मल)', icon: 'Activity', weight: { kapha: 40, vata: 30 } },
+          { id: 'tikshnagni_mridu', label: 'Tikshna Agni & Mridu Koshtha (Hyperactive digestion, acidity, loose bowel)', label_hi: 'तीक्ष्ण अग्नि एवं मृदु कोष्ठ (अत्यधिक तीव्र भूख, एसिडिटी, ढीला मल)', icon: 'Flame', weight: { pitta: 50 } },
+          { id: 'vishamagni_gas', label: 'Vishama Agni & Irregular Koshtha (Irregular unpredictable digestion & bloating)', label_hi: 'विषम अग्नि एवं अनिश्चित कोष्ठ (अनिश्चित पाचन, पेट गैस व आफरा)', icon: 'Wind', weight: { vata: 45 } }
+        ]
+      },
+      {
+        id: 'ayush_nadi',
+        title: 'Step 3: Nadi & Vikriti Pariksha (Pulse & Pathology)',
+        title_hi: 'चरण 3: नाड़ी एवं विकृति परीक्षण (नाड़ी गति व दोष प्रकोप)',
+        subtitle: 'Pulse rhythm & Dhatu/Srotas vitiation assessment',
+        subtitle_hi: 'नाड़ी की गति (सर्प, मण्डूक, हंस) एवं धातु-स्रोतस दुष्टि',
+        options: [
+          { id: 'nadi_sarpa_vata', label: 'Sarpa Gati Nadi (Snake Pulse / Vata Aggravation - Anxiety, Joint Pain, Insomnia)', label_hi: 'सर्प गति नाड़ी (वात प्रकोप - चंचलता, जोड़ों में दर्द, अनिद्रा)', icon: 'Wind', weight: { vata: 50 } },
+          { id: 'nadi_manduka_pitta', label: 'Manduka Gati Nadi (Frog Pulse / Pitta Aggravation - Internal Heat, Acidity, Rashes)', label_hi: 'मण्डूक गति नाड़ी (पित्त प्रकोप - तेजाबियत, शरीर में जलन, चकत्ते)', icon: 'Flame', weight: { pitta: 50 } },
+          { id: 'nadi_hamsa_kapha', label: 'Hamsa Gati Nadi (Swan Pulse / Kapha Aggravation - Heaviness, Mucus Congestion)', label_hi: 'हंस गति नाड़ी (कफ प्रकोप - मंद गति नाड़ी, भारीपन, बलगम)', icon: 'User', weight: { kapha: 50 } },
+          { id: 'nadi_sannipata', label: 'Sannipata Nadi (Complex Tri-Dosha vitiation requiring urgent specialist Vaidya)', label_hi: 'सन्निपात नाड़ी (त्रिदोष का मिश्रित प्रकोप, विशेषज्ञ वैद्य परामर्श आवश्यक)', icon: 'AlertTriangle', isRedFlag: false, weight: { vata: 30, pitta: 30, kapha: 30 } }
+        ]
+      },
+      {
+        id: 'ayush_ahara',
+        title: 'Step 4: Ahara-Vihara Routine (Diet & Lifestyle)',
+        title_hi: 'चरण 4: आहार-विहार एवं दिनचर्या (खान-पान व जीवनशैली)',
+        subtitle: 'Nutritional habits, sleep cycle & physical activity routine',
+        subtitle_hi: 'आहार के गुण, रात्रि जागरण एवं शारीरिक गतिविधि का मूल्यांकन',
+        options: [
+          { id: 'ahara_sattvic', label: 'Sattvic Ahara & Synchronized Dinacharya (Fresh warm food, early sleep, yoga)', label_hi: 'सात्विक आहार एवं नियमित दिनचर्या (ताजा सुपाच्य भोजन, सही समय निद्रा)', icon: 'CheckCircle2', weight: { balanced: 50 } },
+          { id: 'ahara_ushna_spicy', label: 'Excessive Spicy, Deep-Fried, Acidic Diet & Tea/Coffee', label_hi: 'अत्यधिक तीखा, तला हुआ व अमलीय भोजन (मिर्च-मसाला, चाय-कॉफी)', icon: 'Flame', weight: { pitta: 40 } },
+          { id: 'ahara_irregular_night', label: 'Irregular Meal Timings, Suppressing Urges & Late Night Awake', label_hi: 'असमय भोजन, वेग धारण (मल-मूत्र रोकना) एवं देर रात तक जागना', icon: 'Wind', weight: { vata: 40 } },
+          { id: 'ahara_heavy_sedentary', label: 'Heavy Cold Processed Food & Lack of Physical Exercise', label_hi: 'भारी ठंडा बासी भोजन एवं व्यायाम की कमी (दिन में सोना, जंक फूड)', icon: 'Activity', weight: { kapha: 40 } }
+        ]
+      },
+      {
+        id: 'ayush_chikitsa',
+        title: 'Step 5: Chikitsa & Panchakarma Protocol (Treatment Plan)',
+        title_hi: 'चरण 5: चिकित्सा एवं पंचकर्म उपचार योजना (उपचार विधान)',
+        subtitle: 'Personalised Ayurvedic therapy (Deepana-Pachana, Shamana, Shodhana & Rasayana)',
+        subtitle_hi: 'व्यक्तिगत उपचार योजना (दीपन-पाचन, शमन, पंचकर्म एवं रसायन)',
+        options: [
+          { id: 'chikitsa_shamana', label: 'Shamana Chikitsa (Dosha pacifying oral herbal medicine: Samshamani Vati, Giloy)', label_hi: 'शमन चिकित्सा (दोषों को शांत करने वाली आंतरिक जड़ी-बूटी औषधियां)', icon: 'Stethoscope', weight: { balanced: 40 } },
+          { id: 'chikitsa_deepana_pachana', label: 'Deepana & Pachana Protocol (Bio-fire stimulation: Trikatu, Chitrakadi Vati)', label_hi: 'दीपन-पाचन उपचार (पाचकाग्नि दीप्त करने एवं आम-दोष निवारण हेतु)', icon: 'Flame', weight: { kapha: 35, pitta: 35 } },
+          { id: 'chikitsa_panchakarma', label: 'Panchakarma Detox Triage (Virechana / Basti / Nasyam bio-cleansing therapy)', label_hi: 'पंचकर्म शोधन चिकित्सा (शरीर के विषैले तत्वों का निष्कासन - विरेचन/वस्ति)', icon: 'Sparkles', weight: { vata: 40, pitta: 40 } },
+          { id: 'chikitsa_rasayana', label: 'Rasayana & Ojas Rejuvenation (Immunity booster: Chyawanprash, Ashwagandha)', label_hi: 'रसायन एवं ओज संवर्धन (रोग प्रतिरोधक क्षमता एवं नया ओज-बल संचार)', icon: 'CheckCircle2', weight: { balanced: 50 } }
         ]
       }
     ]
@@ -334,6 +375,48 @@ class DecisionTreeEngine {
         { name: 'Tension Type Muscle Contraction Headache', probability: 55, riskLevel: 'LOW', action: 'Rest & Analgesic Relief' },
         { name: 'Acute Migraine with Vascular Aura', probability: 30, riskLevel: 'MODERATE', action: 'Triptan / Dark Room Rest' },
         { name: 'Subarachnoid Hemorrhage / Stroke Red Flag', probability: 15, riskLevel: isRedFlag ? 'HIGH_CRITICAL' : 'LOW', action: 'STAT Non-Contrast Brain CT' }
+      ];
+    } else if (categoryId === 'ayush_wellness') {
+      const dosha = treeAnswers.ayush_dosha;
+      const agni = treeAnswers.ayush_agni;
+      const nadi = treeAnswers.ayush_nadi;
+      const ahara = treeAnswers.ayush_ahara;
+      const chikitsa = treeAnswers.ayush_chikitsa;
+
+      const isPitta = dosha === 'pitta_prakriti' || agni === 'tikshnagni_mridu' || nadi === 'nadi_manduka_pitta' || ahara === 'ahara_ushna_spicy';
+      const isVata = dosha === 'vata_prakriti' || agni === 'vishamagni_gas' || nadi === 'nadi_sarpa_vata' || ahara === 'ahara_irregular_night';
+      const isKapha = dosha === 'kapha_prakriti' || agni === 'mandagni_krura' || nadi === 'nadi_hamsa_kapha' || ahara === 'ahara_heavy_sedentary';
+
+      const needsPanchakarma = chikitsa === 'chikitsa_panchakarma' || nadi === 'nadi_sannipata';
+      const needsDeepana = chikitsa === 'chikitsa_deepana_pachana' || agni === 'mandagni_krura';
+
+      differentials = [
+        {
+          name: isPitta ? 'Step 1-3: Pitta-Pradhana Agnimandya / Tikshnagni (Internal Heat & Acidity)' :
+                isVata ? 'Step 1-3: Vata-Pradhana Vishamagni & Krura Koshtha (Dryness, Gas & Irregular Digestion)' :
+                'Step 1-3: Kapha-Pradhana Mandagni (Sluggish Metabolism, Mucus & Body Heaviness)',
+          probability: 50,
+          riskLevel: 'AYUSH_CHIKITSA',
+          action: isPitta ? 'Deepana-Pachana & Pitta Shamana Ahara (Shatavari, Avipattikar)' :
+                  isVata ? 'Vata Shamana, Snehana & Anulomana Herbs (Dashamoola, Eranda)' :
+                  'Langhana & Kapha-Hara Triphala Decoction (Trikatu, Kanchanar)'
+        },
+        {
+          name: needsPanchakarma ? 'Step 5: Panchakarma Shodhana Detoxification Triage Protocol' :
+                needsDeepana ? 'Step 5: Deepana-Pachana Ama Digestant & Agni Activation' :
+                'Step 5: Shamana Chikitsa & Tridosha Pacifying Herbal Regimen',
+          probability: 30,
+          riskLevel: needsPanchakarma ? 'PANCHAKARMA_TRIAGE' : 'AYUSH_CHIKITSA',
+          action: needsPanchakarma ? 'Vaidya Referral for Virechana / Basti Therapy' :
+                  needsDeepana ? 'Trikatu & Chitrakadi Vati prior to meals' :
+                  'Samshamani Vati & Giloy Ghan Vati'
+        },
+        {
+          name: 'Step 4: Pathya-Apathya Ahara, Dinacharya & Rasayana Ojas Enhancement',
+          probability: 20,
+          riskLevel: 'PREVENTIVE',
+          action: 'Sattvic Ahara, Warm Hydration & Ashwagandha / Chyawanprash'
+        }
       ];
     } else {
       differentials = [

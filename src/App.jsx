@@ -12,7 +12,16 @@ export default function App() {
   const [activeRole, setActiveRole] = useState('login'); // First page default is 'login'!
   const [patientSubView, setPatientSubView] = useState('dashboard'); // 'dashboard' | 'kiosk'
   const [kioskInitialStep, setKioskInitialStep] = useState(2); // 2 = Describe Illness, 3 = OCR Detection
-  const [currentUser, setCurrentUser] = useState({ name: 'Rajesh Verma', role: 'Patient' });
+  const [currentUser, setCurrentUser] = useState({
+    name: 'Rajesh Verma',
+    full_name: 'Rajesh Verma',
+    abha_id: '91-8840-2910-4491',
+    age: 52,
+    gender: 'Male',
+    phone: '9876543210',
+    blood_group: 'O+',
+    role: 'Patient'
+  });
   const [language, setLanguage] = useState('en');
   const [isHardwareModalOpen, setIsHardwareModalOpen] = useState(false);
 
@@ -45,11 +54,11 @@ export default function App() {
             id: item.encounter_id || item._id,
             timestamp: new Date(item.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             patient: {
-              abha_id: item.abha_id,
-              full_name: item.answers?.full_name || 'Patient',
-              age: item.answers?.age || 40,
-              gender: item.answers?.gender || 'Male',
-              phone: item.answers?.phone || '+91 98765 43210'
+              abha_id: item.patient?.abha_id || item.abha_id || '91-8840-2910-4491',
+              full_name: item.patient?.full_name || item.patient?.name || item.answers?.full_name || 'Rajesh Verma',
+              age: item.patient?.age || item.answers?.age || 40,
+              gender: item.patient?.gender || item.answers?.gender || 'Male',
+              phone: item.patient?.phone || item.answers?.phone || '+91 98765 43210'
             },
             careMode: item.care_mode || 'allopathy',
             symptomCategory: item.symptom_category || 'Intake',
@@ -86,7 +95,24 @@ export default function App() {
   };
 
   const handleEncounterSubmit = (newEncounter) => {
-    setEncounterQueue(prev => [newEncounter, ...prev]);
+    setEncounterQueue(prev => {
+      const filtered = prev.filter(e => {
+        const isSamePatient = (
+          (e.patient?.abha_id && e.patient?.abha_id === newEncounter.patient?.abha_id) ||
+          (e.patient?.full_name && e.patient?.full_name === newEncounter.patient?.full_name)
+        );
+        const isNewActualCase = newEncounter.symptomCategory && 
+                                !newEncounter.symptomCategory.toLowerCase().includes('routine') && 
+                                newEncounter.symptomCategory !== 'Intake';
+        const isExistingRoutine = e.symptomCategory && 
+                                  (e.symptomCategory.toLowerCase().includes('routine') || e.symptomCategory === 'Intake');
+        if (isSamePatient && isNewActualCase && isExistingRoutine) {
+          return false; // Remove routine checkup placeholder in favor of actual case
+        }
+        return true;
+      });
+      return [newEncounter, ...filtered];
+    });
     setActiveEncounter(newEncounter);
     setPatientSubView('dashboard');
     setActiveRole('doctor'); // Switch to Doctor OPD Portal to show queued intake!
@@ -125,6 +151,8 @@ export default function App() {
                 setKioskInitialStep(3);
                 setPatientSubView('kiosk');
               }}
+              currentUser={currentUser}
+              language={language}
             />
           ) : (
             <div className="space-y-4">
@@ -144,6 +172,7 @@ export default function App() {
                 language={language}
                 isDoctorAvailable={isDoctorAvailable}
                 opdSessionNumber={opdSessionNumber}
+                currentUser={currentUser}
               />
             </div>
           )
@@ -156,6 +185,7 @@ export default function App() {
             setIsDoctorAvailable={setIsDoctorAvailable}
             opdSessionNumber={opdSessionNumber}
             setOpdSessionNumber={setOpdSessionNumber}
+            currentUser={currentUser}
           />
         ) : (
           <AdminDashboard

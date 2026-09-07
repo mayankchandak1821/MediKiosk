@@ -13,8 +13,9 @@ import VisualVitalsGauges from './VisualVitalsGauges';
 import VisualDocumentScanner from './VisualDocumentScanner';
 import ClinicalDecisionTreeWizard from './ClinicalDecisionTreeWizard';
 import { decisionTreeEngine } from '../services/decisionTreeEngine';
+import { patientStore } from '../services/patientStore';
 
-export default function KioskIntake({ currentVitals, onEncounterSubmit, language, isDoctorAvailable = true, opdSessionNumber = 1, initialStep = 2 }) {
+export default function KioskIntake({ currentVitals, onEncounterSubmit, language, isDoctorAvailable = true, opdSessionNumber = 1, initialStep = 2, currentUser }) {
   const isHindi = language === 'hi';
   // Step State: 1 = Patient Auth / Sign Up, 2 = Multimodal Voice & Touch Intake, 3 = Medical Document OCR, 4 = Review & Submit
   const [step, setStep] = useState(initialStep);
@@ -22,16 +23,31 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
   // Auth Mode: 'login' | 'signup'
   const [authTab, setAuthTab] = useState('login');
 
-  // Patient Info State
+  // Patient Info State (Dynamic from logged-in user or default)
   const [patient, setPatient] = useState({
-    abha_id: '91-8840-2910-4491',
-    full_name: 'Rajesh Verma',
-    age: 52,
-    gender: 'Male',
-    phone: '9876543210',
+    abha_id: currentUser?.abha_id || '91-8840-2910-4491',
+    full_name: currentUser?.name || currentUser?.full_name || 'Rajesh Verma',
+    age: currentUser?.age || 52,
+    gender: currentUser?.gender || 'Male',
+    phone: currentUser?.phone || '9876543210',
     preferred_language: language || 'en',
-    aadhaar_last4: '4829'
+    aadhaar_last4: currentUser?.aadhaar_last4 || '4829'
   });
+
+  // Keep patient state synced with active currentUser prop
+  useEffect(() => {
+    if (currentUser) {
+      setPatient(prev => ({
+        ...prev,
+        abha_id: currentUser.abha_id || prev.abha_id,
+        full_name: currentUser.name || currentUser.full_name || prev.full_name,
+        age: currentUser.age || prev.age,
+        gender: currentUser.gender || prev.gender,
+        phone: currentUser.phone || prev.phone,
+        aadhaar_last4: currentUser.aadhaar_last4 || prev.aadhaar_last4
+      }));
+    }
+  }, [currentUser]);
 
   // Sign Up Form State
   const [signUpForm, setSignUpForm] = useState({
@@ -44,7 +60,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
   });
 
   // Clinical Intake Mode: 'allopathy' | 'ayush'
-  const [careMode, setCareMode] = useState('allopathy');
+  const [careMode, setCareMode] = useState(currentUser?.careMode || 'ayush');
 
   // Intake Questionnaire State (DEFAULT TO ROUTINE CHECKUP - NO RED FLAGS)
   const [selectedCategory, setSelectedCategory] = useState('routine_checkup');
@@ -136,20 +152,23 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
       return;
     }
 
-    const newAbhaId = `91-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newAbhaId = patientStore.generateAbhaId();
 
     const registeredPatient = {
-      abha_id: newAbhaId,
+      name: signUpForm.full_name,
       full_name: signUpForm.full_name,
+      abha_id: newAbhaId,
       age: parseInt(signUpForm.age, 10) || 30,
       gender: signUpForm.gender,
       phone: signUpForm.phone,
-      preferred_language: signUpForm.preferred_language,
-      aadhaar_last4: signUpForm.aadhaar.slice(-4) || '9999'
+      preferred_language: signUpForm.preferred_language || language,
+      aadhaar_last4: signUpForm.aadhaar.slice(-4) || '9999',
+      role: 'Patient'
     };
 
+    patientStore.savePatient(registeredPatient);
     setPatient(registeredPatient);
-    alert(`Success! Account created & ABHA Health Card generated:\nABHA ID: ${newAbhaId}`);
+    alert(`🎉 Account Created & ABHA Health Card Generated!\n\nYour ABHA ID: ${newAbhaId}\nName: ${registeredPatient.full_name}\nMobile Number: ${registeredPatient.phone}\n\nYou can use this ABHA ID or Mobile Number to log in again anytime!`);
     setAuthTab('login');
     setStep(2);
   };
@@ -708,99 +727,173 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             onChange={(rating) => setAnswers({ ...answers, severity: rating })}
           />
 
-          {/* Branching Symptom Options */}
+          {/* Branching Symptom / AYUSH Options */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-teal-400" />
-                Symptom Details ({selectedCategory.toUpperCase()})
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+                {careMode === 'ayush' ? '🌿 AYUSH Dashavidha & Prakriti Pariksha (आयुर्वेदिक प्रकृति एवं पाचन परीक्षा)' : `Symptom Details (${selectedCategory.toUpperCase()})`}
               </h3>
-              <span className="text-[11px] text-slate-400 italic">Tap any selected option to deselect / toggle off</span>
+              <span className="text-[11px] text-slate-400 italic">
+                {careMode === 'ayush' ? 'Select your Ayurvedic body constitution & digestion pattern' : 'Tap any selected option to deselect / toggle off'}
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                  Discomfort Character (Tap to toggle)
-                </label>
-                <div className="space-y-2">
-                  {SOCRATES_QUESTIONS.character.options.map(opt => (
-                    <button
-                      key={opt.id}
-                      onClick={() => setAnswers({ ...answers, character: answers.character === opt.id ? '' : opt.id })}
-                      className={`w-full p-3 rounded-xl border text-xs text-left transition-all ${
-                        answers.character === opt.id
-                          ? 'bg-teal-500/20 border-teal-400 text-teal-200 font-bold shadow'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      {opt.label} {answers.character === opt.id && '(Selected - Tap to Deselect)'}
-                    </button>
-                  ))}
+            {careMode === 'ayush' ? (
+              <div className="space-y-5">
+                {/* 1. Prakriti Pariksha */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/30 space-y-3">
+                  <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
+                    🌿 {AYUSH_QUESTIONS.prakriti.title_hi} ({AYUSH_QUESTIONS.prakriti.title})
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {AYUSH_QUESTIONS.prakriti.options.map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setAnswers({ ...answers, prakriti: opt.id })}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          answers.prakriti === opt.id
+                            ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 font-bold shadow'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                        }`}
+                      >
+                        <span className="font-bold block text-slate-100">{isHindi ? opt.label_hi : opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Agni Pariksha */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/30 space-y-3">
+                  <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
+                    🔥 {AYUSH_QUESTIONS.agni.title_hi} ({AYUSH_QUESTIONS.agni.title})
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {AYUSH_QUESTIONS.agni.options.map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setAnswers({ ...answers, agni: opt.id })}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          answers.agni === opt.id
+                            ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 font-bold shadow'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                        }`}
+                      >
+                        <span className="font-bold block text-slate-100">{isHindi ? opt.label_hi : opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Koshtha Pariksha */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/30 space-y-3">
+                  <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
+                    🚽 {AYUSH_QUESTIONS.koshtha.title_hi} ({AYUSH_QUESTIONS.koshtha.title})
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    {AYUSH_QUESTIONS.koshtha.options.map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setAnswers({ ...answers, koshtha: opt.id })}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          answers.koshtha === opt.id
+                            ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 font-bold shadow'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                        }`}
+                      >
+                        <span className="font-bold block text-slate-100">{isHindi ? opt.label_hi : opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                      Discomfort Character (Tap to toggle)
+                    </label>
+                    <div className="space-y-2">
+                      {SOCRATES_QUESTIONS.character.options.map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setAnswers({ ...answers, character: answers.character === opt.id ? '' : opt.id })}
+                          className={`w-full p-3 rounded-xl border text-xs text-left transition-all ${
+                            answers.character === opt.id
+                              ? 'bg-teal-500/20 border-teal-400 text-teal-200 font-bold shadow'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          {opt.label} {answers.character === opt.id && '(Selected - Tap to Deselect)'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                  Pain Radiation (Does it spread? Tap to toggle)
-                </label>
-                <div className="space-y-2">
-                  {SOCRATES_QUESTIONS.radiation.options.map(opt => (
-                    <button
-                      key={opt.id}
-                      onClick={() => setAnswers({ ...answers, radiation: answers.radiation === opt.id ? 'none' : opt.id })}
-                      className={`w-full p-3 rounded-xl border text-xs text-left transition-all ${
-                        answers.radiation === opt.id
-                          ? opt.isRedFlag
-                            ? 'bg-rose-500/20 border-rose-400 text-rose-200 font-bold shadow'
-                            : 'bg-teal-500/20 border-teal-400 text-teal-200 font-bold shadow'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      {opt.label} {answers.radiation === opt.id && '(Selected - Tap to Deselect)'}
-                    </button>
-                  ))}
+                  <div>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                      Pain Radiation (Does it spread? Tap to toggle)
+                    </label>
+                    <div className="space-y-2">
+                      {SOCRATES_QUESTIONS.radiation.options.map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setAnswers({ ...answers, radiation: answers.radiation === opt.id ? 'none' : opt.id })}
+                          className={`w-full p-3 rounded-xl border text-xs text-left transition-all ${
+                            answers.radiation === opt.id
+                              ? opt.isRedFlag
+                                ? 'bg-rose-500/20 border-rose-400 text-rose-200 font-bold shadow'
+                                : 'bg-teal-500/20 border-teal-400 text-teal-200 font-bold shadow'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          {opt.label} {answers.radiation === opt.id && '(Selected - Tap to Deselect)'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Associated Symptoms Multi-Select Toggle */}
-            <div className="pt-2 border-t border-slate-800">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                Associated Symptoms (Multi-Select / Tap to Toggle On or Off)
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                {[
-                  { id: 'shortness_of_breath', label: '🫁 Shortness of Breath' },
-                  { id: 'cold_sweats', label: '💦 Cold Sweats' },
-                  { id: 'nausea_dizziness', label: '🤢 Nausea / Dizziness' },
-                  { id: 'fever_chills', label: '🌡️ Fever / Chills' },
-                  { id: 'fatigue', label: '😴 Muscle Fatigue' },
-                  { id: 'cough', label: '🗣️ Dry Cough' }
-                ].map(assoc => {
-                  const isSelected = answers.associations?.includes(assoc.id);
-                  return (
-                    <button
-                      key={assoc.id}
-                      onClick={() => {
-                        const current = answers.associations || [];
-                        const updated = isSelected
-                          ? current.filter(item => item !== assoc.id)
-                          : [...current, assoc.id];
-                        setAnswers({ ...answers, associations: updated });
-                      }}
-                      className={`p-2.5 rounded-xl border text-left font-semibold transition-all ${
-                        isSelected
-                          ? 'bg-teal-500/20 border-teal-400 text-teal-200 font-bold shadow'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      {assoc.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                {/* Associated Symptoms Multi-Select Toggle */}
+                <div className="pt-2 border-t border-slate-800">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                    Associated Symptoms (Multi-Select / Tap to Toggle On or Off)
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                    {[
+                      { id: 'shortness_of_breath', label: '🫁 Shortness of Breath' },
+                      { id: 'cold_sweats', label: '💦 Cold Sweats' },
+                      { id: 'nausea_dizziness', label: '🤢 Nausea / Dizziness' },
+                      { id: 'fever_chills', label: '🌡️ Fever / Chills' },
+                      { id: 'fatigue', label: '😴 Muscle Fatigue' },
+                      { id: 'cough', label: '🗣️ Dry Cough' }
+                    ].map(assoc => {
+                      const isSelected = answers.associations?.includes(assoc.id);
+                      return (
+                        <button
+                          key={assoc.id}
+                          onClick={() => {
+                            const current = answers.associations || [];
+                            const updated = isSelected
+                              ? current.filter(item => item !== assoc.id)
+                              : [...current, assoc.id];
+                            setAnswers({ ...answers, associations: updated });
+                          }}
+                          className={`p-2.5 rounded-xl border text-left font-semibold transition-all ${
+                            isSelected
+                              ? 'bg-teal-500/20 border-teal-400 text-teal-200 font-bold shadow'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          {assoc.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex justify-between items-center pt-2">

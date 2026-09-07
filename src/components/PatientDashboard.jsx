@@ -12,33 +12,46 @@ export default function PatientDashboard({
   onDescribeIllness,
   onOcrDetection,
   currentVitals,
-  language = 'hi'
+  language = 'hi',
+  currentUser
 }) {
   const [selectedEncounter, setSelectedEncounter] = useState(encounterQueue[0] || null);
 
+  // Care Mode State (AYUSH vs Allopathy)
+  const [careMode, setCareMode] = useState(currentUser?.careMode || 'ayush');
+
   // Decision Tree Modal State
   const [showTreeModal, setShowTreeModal] = useState(false);
-  const [treeCategory, setTreeCategory] = useState('chest_pain');
+  const [treeCategory, setTreeCategory] = useState(currentUser?.careMode === 'allopathy' ? 'chest_pain' : 'ayush_wellness');
   const [treeAnswers, setTreeAnswers] = useState({});
-  // Default demo patient profile if queue is empty
-  const patientProfile = selectedEncounter?.patient || {
-    full_name: 'Rajesh Verma',
-    abha_id: '91-8840-2910-4491',
-    age: 52,
-    gender: 'Male',
-    phone: '+91 98765 43210',
-    blood_group: 'O+'
+  
+  // Patient profile dynamically derived from active logged-in user
+  const patientProfile = {
+    full_name: currentUser?.name || currentUser?.full_name || selectedEncounter?.patient?.full_name || 'Rajesh Verma',
+    abha_id: currentUser?.abha_id || selectedEncounter?.patient?.abha_id || '91-8840-2910-4491',
+    age: currentUser?.age || selectedEncounter?.patient?.age || 52,
+    gender: currentUser?.gender || selectedEncounter?.patient?.gender || 'Male',
+    phone: currentUser?.phone || selectedEncounter?.patient?.phone || '+91 98765 43210',
+    blood_group: currentUser?.blood_group || selectedEncounter?.patient?.blood_group || 'O+',
+    careMode
   };
 
   const handleCompleteTreeAssessment = (evalData) => {
+    const categoryName = treeCategory === 'chest_pain' ? 'Chest Pain / Emergency' : 
+                         treeCategory === 'fever' ? 'Fever & Infection' : 
+                         treeCategory === 'abdominal' ? 'Stomach / Abdominal' : 
+                         treeCategory === 'respiratory' ? 'Cough & Breathlessness' : 
+                         treeCategory === 'headache' ? 'Headache / Dizziness' : 
+                         treeCategory === 'ayush_wellness' ? 'AYUSH Wellness & Chikitsa' : 'Routine OPD Checkup';
+
     const newEnc = {
       id: `ENC-${Date.now().toString().slice(-4)}`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       patient: patientProfile,
-      careMode: 'allopathy',
-      symptomCategory: treeCategory === 'chest_pain' ? 'Chest Pain / Emergency' : 'Symptom Assessment',
+      careMode: careMode, // Dynamic 'ayush' | 'allopathy'
+      symptomCategory: categoryName,
       answers: {
-        site: treeAnswers.chest_radiation === 'rad_arm_jaw_neck' ? 'Chest Left & Arm' : 'Chest Center',
+        site: treeAnswers.site || (treeAnswers.chest_radiation === 'rad_arm_jaw_neck' ? 'Chest Left & Arm' : 'Chest Center'),
         character: treeAnswers.chest_character === 'crushing_pressure' ? 'Pressure / Heavy Squeezing' : 'Discomfort',
         severity: evalData.isRedFlag ? 8 : 4,
         associations: treeAnswers.chest_associated || []
@@ -57,6 +70,15 @@ export default function PatientDashboard({
     };
 
     setSelectedEncounter(newEnc);
+
+    // Remove any existing routine checkup card for this same patient from encounterQueue
+    const existingRoutineIndex = encounterQueue.findIndex(
+      e => (e.patient?.abha_id === patientProfile.abha_id || e.patient?.full_name === patientProfile.full_name) &&
+           (e.symptomCategory?.toLowerCase().includes('routine') || e.symptomCategory === 'Intake')
+    );
+    if (existingRoutineIndex !== -1) {
+      encounterQueue.splice(existingRoutineIndex, 1);
+    }
     encounterQueue.unshift(newEnc);
 
     // Sync to Backend API
@@ -77,10 +99,47 @@ export default function PatientDashboard({
 
   const downloadPatientRecord = (enc) => {
     if (!enc) return;
+    const isAyush = enc.careMode === 'ayush' || careMode === 'ayush';
     const pastHistoryStr = (enc.scannedDoc?.pastMedicalHistory || enc.scannedDoc?.diagnoses || []).join(', ') || 'No past chronic condition documented';
     const medsStr = (enc.scannedDoc?.medications || []).map(m => `${m.name} ${m.dosage}`).join(', ') || 'None';
 
-    const recordText = `=====================================================
+    const recordText = isAyush ? `=====================================================
+ALL INDIA INSTITUTE OF AYURVEDA (AIIA) - AYUSH PHR RECORD
+-----------------------------------------------------
+PATIENT IDENTIFICATION:
+Full Name: ${enc.patient?.full_name || patientProfile.full_name}
+ABHA ID: ${enc.patient?.abha_id || patientProfile.abha_id}
+Age/Gender: ${enc.patient?.age || patientProfile.age} Yrs / ${enc.patient?.gender || patientProfile.gender}
+Treatment System: 🌿 AYUSH Ayurvedic OPD
+
+5-STEP AYURVEDIC DIAGNOSTIC & TREATMENT PROTOCOL:
+-----------------------------------------------------
+Step 1 [Prakriti Pariksha]: Tridosha Body Constitution Assessment
+Step 2 [Agni & Koshtha]: Digestive Fire & Bowel Elimination Evaluation
+Step 3 [Nadi & Vikriti]: Pulse Examination & Dhatu/Srotas Pathology
+Step 4 [Ahara-Vihara]: Sattvic Diet, Sleep Cycle & Dinacharya Routine
+Step 5 [Chikitsa & Panchakarma]: Deepana-Pachana, Shamana & Shodhana Plan
+
+AYURVEDIC ENCOUNTER SUMMARY:
+Encounter ID: ${enc.id}
+Visit Date/Time: ${enc.timestamp || new Date().toLocaleString()}
+Visit Category: ${enc.symptomCategory || 'AYUSH Wellness & Chikitsa'}
+Assigned Physician: Vaidya Suresh Sharma, BAMS, MD (Ayurveda)
+
+NADI & TELEMETRY PARAMETERS:
+Nadi Spandana (Pulse): ${enc.vitals?.heart_rate_bpm || currentVitals.heart_rate_bpm} BPM (Vata-Pitta Sarpa Gati)
+Prana Vayu (SpO2): ${enc.vitals?.spo2_percent || currentVitals.spo2_percent}%
+Deha Tapamana (Temp): ${enc.vitals?.temperature_c || currentVitals.temperature_c}°C
+
+AYURVEDIC DIAGNOSES & HERBAL FORMULATIONS:
+Diagnoses: ${pastHistoryStr}
+Prescribed Formulations: ${medsStr}
+
+VAIDYA CONSULTATION & PATHYA-APATHYA ADVICE:
+${enc.doctor_notes || 'Patient evaluated following 5-Step AYUSH Protocol. Prescribed Deepana-Pachana, Shamana herbal formulations & Sattvic Ahara.'}
+
+Status: ${enc.status === 'COMPLETED_SIGNED_OFF' ? 'OFFICIALLY SIGNED OFF BY VAIDYA DOCTOR' : 'IN AYUSH OPD QUEUE'}
+=====================================================` : `=====================================================
 AIIA GOVERNMENT HOSPITAL - PATIENT PERSONAL HEALTH RECORD (PHR)
 -----------------------------------------------------
 PATIENT IDENTIFICATION:
@@ -137,6 +196,26 @@ Status: ${enc.status === 'COMPLETED_SIGNED_OFF' ? 'OFFICIALLY SIGNED OFF BY DOCT
             <p className="text-xs text-slate-400 font-mono mt-0.5">
               ABHA ID: {patientProfile.abha_id} • {patientProfile.gender}, {patientProfile.age} Yrs • Phone: {patientProfile.phone}
             </p>
+            {/* Dynamic Treatment System Indicator Badge & Switcher */}
+            <div className="mt-2 flex items-center gap-2">
+              <span className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 border shadow ${
+                careMode === 'ayush'
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                  : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+              }`}>
+                {careMode === 'ayush' ? '🌿 AYUSH Ayurvedic OPD Mode' : '🩺 Allopathic OPD Mode'}
+              </span>
+              <button
+                onClick={() => {
+                  const nextMode = careMode === 'ayush' ? 'allopathy' : 'ayush';
+                  setCareMode(nextMode);
+                  if (nextMode === 'ayush') setTreeCategory('ayush_wellness');
+                }}
+                className="text-[11px] font-bold text-slate-400 hover:text-teal-300 underline underline-offset-2 cursor-pointer transition-colors"
+              >
+                Switch to {careMode === 'ayush' ? '🩺 Allopathy' : '🌿 AYUSH'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -170,23 +249,29 @@ Status: ${enc.status === 'COMPLETED_SIGNED_OFF' ? 'OFFICIALLY SIGNED OFF BY DOCT
               <Zap className="w-4 h-4 text-teal-400" /> Interactive Clinical Symptom Decision Tree
             </span>
 
-            {/* Category Selector Tabs */}
+            {/* Category Selector Tabs (Customized for AYUSH vs Allopathy) */}
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              {[
+              {(careMode === 'ayush' ? [
+                { id: 'ayush_wellness', label: '🌿 AYUSH Prakriti & Tridosha' },
+                { id: 'fever', label: 'Jwara (Fever & Infection)' },
+                { id: 'abdominal', label: 'Annavaha Srotas (Agni & Digestion)' },
+                { id: 'respiratory', label: 'Pranavaha Srotas (Cough & Breath)' },
+                { id: 'routine_checkup', label: 'Routine AYUSH OPD Checkup' }
+              ] : [
                 { id: 'chest_pain', label: 'Chest Pain / Heart' },
                 { id: 'fever', label: 'Fever & Infection' },
                 { id: 'abdominal', label: 'Stomach / Abdominal' },
                 { id: 'respiratory', label: 'Cough / Breathlessness' },
                 { id: 'headache', label: 'Headache / Dizziness' },
-                { id: 'ayush_wellness', label: 'AYUSH Wellness' },
+                { id: 'ayush_wellness', label: '🌿 AYUSH Wellness' },
                 { id: 'routine_checkup', label: 'Routine OPD Checkup' }
-              ].map((cat) => (
+              ]).map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setTreeCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition-all border ${
+                  className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition-all border cursor-pointer ${
                     treeCategory === cat.id
-                      ? 'bg-teal-500 text-slate-950 border-teal-400 shadow'
+                      ? careMode === 'ayush' ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow font-extrabold' : 'bg-teal-500 text-slate-950 border-teal-400 shadow'
                       : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-800'
                   }`}
                 >
@@ -219,13 +304,19 @@ Status: ${enc.status === 'COMPLETED_SIGNED_OFF' ? 'OFFICIALLY SIGNED OFF BY DOCT
         {/* Left Column: My ABHA Digital Health Card & Vitals History (4 Cols) */}
         <div className="lg:col-span-4 space-y-6">
           {/* ABHA Digital Health Card */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-teal-500/30 shadow-xl space-y-4">
+          <div className={`p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border shadow-xl space-y-4 ${
+            careMode === 'ayush' ? 'border-emerald-500/30' : 'border-teal-500/30'
+          }`}>
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span className="text-xs font-extrabold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4" /> Ayushman Bharat Health Card
+              <span className={`text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${
+                careMode === 'ayush' ? 'text-emerald-400' : 'text-teal-400'
+              }`}>
+                <ShieldCheck className="w-4 h-4" /> {careMode === 'ayush' ? 'AYUSH Health Card (AIIA)' : 'Ayushman Bharat Health Card'}
               </span>
-              <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 font-mono text-[10px] font-bold">
-                ABDM PHR
+              <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
+                careMode === 'ayush' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-teal-500/10 text-teal-300'
+              }`}>
+                {careMode === 'ayush' ? 'AYUSH PHR' : 'ABDM PHR'}
               </span>
             </div>
 
@@ -236,36 +327,44 @@ Status: ${enc.status === 'COMPLETED_SIGNED_OFF' ? 'OFFICIALLY SIGNED OFF BY DOCT
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">ABHA Number:</span>
-                <span className="text-teal-300 font-bold">{patientProfile.abha_id}</span>
+                <span className={careMode === 'ayush' ? 'text-emerald-300 font-bold' : 'text-teal-300 font-bold'}>{patientProfile.abha_id}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Age / Gender:</span>
                 <span className="text-slate-200">{patientProfile.age} Yrs / {patientProfile.gender}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Blood Group:</span>
-                <span className="text-rose-400 font-bold">{patientProfile.blood_group}</span>
-              </div>
+              {careMode === 'ayush' ? (
+                <div className="flex justify-between border-t border-slate-800/80 pt-2">
+                  <span className="text-slate-500">Prakriti / Tridosha:</span>
+                  <span className="text-emerald-400 font-bold">Vata-Pitta Pradhana</span>
+                </div>
+              ) : (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Blood Group:</span>
+                  <span className="text-rose-400 font-bold">{patientProfile.blood_group}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Current Live Vitals Telemetry */}
+          {/* Current Live Vitals / Nadi Telemetry */}
           <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <Activity className="w-4 h-4 text-cyan-400" /> Current Kiosk Sensor Vitals
+              <Activity className={`w-4 h-4 ${careMode === 'ayush' ? 'text-emerald-400' : 'text-cyan-400'}`} />
+              {careMode === 'ayush' ? '🌿 Nadi Pariksha & Sensor Telemetry' : 'Current Kiosk Sensor Vitals'}
             </h3>
             <div className="grid grid-cols-3 gap-2.5 font-mono text-center text-xs">
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">Temp</span>
+                <span className="text-slate-500 block text-[10px]">{careMode === 'ayush' ? 'Tapamana' : 'Temp'}</span>
                 <span className="font-bold text-amber-400 text-sm">{currentVitals.temperature_c}°C</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">SpO2</span>
+                <span className="text-slate-500 block text-[10px]">{careMode === 'ayush' ? 'Prana Vayu' : 'SpO2'}</span>
                 <span className="font-bold text-cyan-400 text-sm">{currentVitals.spo2_percent}%</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">Heart Rate</span>
-                <span className="font-bold text-rose-400 text-sm">{currentVitals.heart_rate_bpm} BPM</span>
+                <span className="text-slate-500 block text-[10px]">{careMode === 'ayush' ? 'Nadi Spandana' : 'Heart Rate'}</span>
+                <span className="font-bold text-emerald-400 text-sm">{currentVitals.heart_rate_bpm} BPM</span>
               </div>
             </div>
           </div>

@@ -109,6 +109,49 @@ Hemoglobin (Hb)                 14.2         g/dL       13.0 - 17.0    [NORMAL]`
       allergies: [],
       drugWarnings: ['NSAIDs (Ibuprofen/Naproxen) should be used with caution due to elevated Serum Creatinine (1.4 mg/dL).']
     }
+  },
+  {
+    id: 'rx_ayurvedic_ayush',
+    name: 'Prescription D (AYUSH Ayurvedic OPD Note - AIIA)',
+    type: 'AYUSH_PRESCRIPTION',
+    rawText: `Vaidya Suresh Sharma, BAMS, MD (Ayurveda) - Reg No: AYUSH-8821
+All India Institute of Ayurveda (AIIA), New Delhi
+Patient: Rajesh Verma, 52M | Date: 05/09/2026
+
+Prakriti: Vata-Pitta Pradhana | Agni: Manda Agni | Koshtha: Krura
+
+C/O: Aam-paachana, Agnimandya, Constipation, Joint stiffness & fatigue for 2 weeks.
+O/E: Nadi: Vata-Pitta Gati (Spandana 82/min), Jihva: Saama (Coated tongue), Temp 37.1 C
+
+Rx (Ayurvedic Formulations):
+1. Ashwagandha Churna -- 3g twice daily with warm milk x 30 days
+2. Triphala Churna -- 5g at bedtime with warm water x 30 days
+3. Mahasudarshan Ghanvati -- 2 tabs BD x 15 days
+4. Giloy Satva (Sanshamani Vati) -- 2 tabs BD x 15 days
+
+Pathya Advice: Warm sattvic food, avoid cold water, take cumin-coriander tea, light morning Yoga.`,
+    extracted: {
+      docType: 'AYUSH Ayurvedic Prescription',
+      doctor: 'Vaidya Suresh Sharma, BAMS, MD (Ayur)',
+      date: '2026-09-05',
+      summary: 'Patient presenting with Vata-Pitta Agnimandya & Joint Stiffness. Prescribed Ashwagandha, Triphala, Mahasudarshan Ghanvati & Giloy Satva.',
+      diagnoses: ['Vata-Pitta Agnimandya', 'Sandhigata Vata / Joint Stiffness'],
+      pastMedicalHistory: ['Vata-Pitta Agnimandya', 'Sandhigata Vata'],
+      clinicalNotes: [
+        'Prakriti Assessment: Vata-Pitta Pradhana, Manda Agni, Krura Koshtha',
+        'Nadi Pariksha: Vata-Pitta Gati (Pulse 82/min), Saama Jihva (Coated tongue)',
+        'Ayurvedic Pathya Advice: Warm sattvic food, avoid cold water, take cumin-coriander tea, light morning Yoga.'
+      ],
+      medications: [
+        { name: 'Ashwagandha Churna', dosage: '3g', frequency: 'Twice daily with warm milk', duration: '30 days', status: 'ACTIVE', class: 'Ayurvedic Rasayana / Vata Shamana' },
+        { name: 'Triphala Churna', dosage: '5g', frequency: 'Bedtime with warm water', duration: '30 days', status: 'ACTIVE', class: 'Anulomana / Koshtha Shuddhi' },
+        { name: 'Mahasudarshan Ghanvati', dosage: '2 tabs', frequency: 'Twice daily (BD)', duration: '15 days', status: 'ACTIVE', class: 'Jwarahara / Deepana-Pachana' },
+        { name: 'Giloy Satva (Sanshamani Vati)', dosage: '2 tabs', frequency: 'Twice daily (BD)', duration: '15 days', status: 'ACTIVE', class: 'Immuno-modulator / Pitta Shamana' }
+      ],
+      investigations: [],
+      allergies: [],
+      drugWarnings: []
+    }
   }
 ];
 
