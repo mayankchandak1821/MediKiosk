@@ -20,11 +20,17 @@ class Patient(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     abha_id: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    abha_number: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    phr_address: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     full_name: Mapped[str] = mapped_column(String(100))
     date_of_birth: Mapped[Optional[datetime]] = mapped_column(DateTime)
     gender: Mapped[str] = mapped_column(String(20))
     phone_number: Mapped[Optional[str]] = mapped_column(String(15))
     preferred_language: Mapped[str] = mapped_column(String(10), default="en")
+    profile_photo: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    kyc_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    address_details: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    consent_record: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships

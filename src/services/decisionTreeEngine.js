@@ -1,5 +1,5 @@
 /**
- * MediKiosk Universal Clinical Decision Tree Engine (SIH26047)
+ * MediKiosk Universal Clinical Decision Tree Engine
  * Implements dynamic, branching clinical symptom decision trees for:
  * - Chest Pain / Emergency
  * - Fever & Infections

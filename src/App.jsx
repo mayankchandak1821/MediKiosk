@@ -9,13 +9,50 @@ import AdminDashboard from './components/AdminDashboard';
 import HardwareSimulator from './components/HardwareSimulator';
 import { hardwareAdapter } from './services/hardwareAdapter';
 
+// URL Path to Role Resolver
+const getRoleFromPath = (path) => {
+  const p = (path || '').toLowerCase().replace(/\/+$/, '') || '/';
+  if (p === '/doctor' || p === '/opd') return 'doctor';
+  if (p === '/patient' || p === '/kiosk') return 'patient';
+  if (p === '/admin') return 'admin';
+  if (p === '/login') return 'login';
+  return 'landing'; // Default root '/'
+};
+
 export default function App() {
-  const [activeRole, setActiveRole] = useState('landing'); // Default view: New landing page!
-  const [patientSubView, setPatientSubView] = useState('dashboard'); // 'dashboard' | 'kiosk'
-  const [kioskInitialStep, setKioskInitialStep] = useState(1); // 1 = Patient Identity & ABHA, 2 = Describe Illness, 3 = OCR Detection
+  const initialRole = getRoleFromPath(window.location.pathname);
+  const [activeRole, setActiveRole] = useState(initialRole);
+  const [patientSubView, setPatientSubView] = useState(initialRole === 'patient' ? 'kiosk' : 'dashboard');
+  const [kioskInitialStep, setKioskInitialStep] = useState(1);
   const [currentUser, setCurrentUser] = useState({ name: 'Rajesh Verma', role: 'Patient' });
   const [language, setLanguage] = useState('en');
   const [isHardwareModalOpen, setIsHardwareModalOpen] = useState(false);
+
+  // URL Navigation helper
+  const navigateTo = (path, targetRole = null) => {
+    const role = targetRole || getRoleFromPath(path);
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+    }
+    setActiveRole(role);
+    if (role === 'patient') {
+      setPatientSubView('kiosk');
+      setKioskInitialStep(1);
+    }
+  };
+
+  // Synchronize browser forward/back buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const role = getRoleFromPath(window.location.pathname);
+      setActiveRole(role);
+      if (role === 'patient') {
+        setPatientSubView('kiosk');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Doctor Availability & OPD Session State
   const [isDoctorAvailable, setIsDoctorAvailable] = useState(true);
@@ -82,32 +119,30 @@ export default function App() {
 
   const handleLogin = (role, userDetails) => {
     setCurrentUser(userDetails);
-    setActiveRole(role);
-    if (role === 'patient') setPatientSubView('dashboard');
+    if (role === 'patient') {
+      navigateTo('/patient', 'patient');
+      setPatientSubView('dashboard');
+    } else if (role === 'doctor') {
+      navigateTo('/doctor', 'doctor');
+    } else {
+      navigateTo('/admin', 'admin');
+    }
   };
 
   const handleEncounterSubmit = (newEncounter) => {
     setEncounterQueue(prev => [newEncounter, ...prev]);
     setActiveEncounter(newEncounter);
     setPatientSubView('dashboard');
-    setActiveRole('doctor'); // Switch to Doctor OPD Portal to show queued intake!
+    navigateTo('/doctor', 'doctor'); // Switch to Doctor OPD Portal with /doctor URL!
   };
 
   return (
     <>
       {activeRole === 'landing' ? (
         <LandingPage
-          onLaunchKiosk={() => {
-            setActiveRole('patient');
-            setPatientSubView('kiosk');
-            setKioskInitialStep(1);
-          }}
-          onLaunchDoctor={() => {
-            setActiveRole('doctor');
-          }}
-          onLaunchLogin={() => {
-            setActiveRole('login');
-          }}
+          onLaunchKiosk={() => navigateTo('/patient', 'patient')}
+          onLaunchDoctor={() => navigateTo('/doctor', 'doctor')}
+          onLaunchLogin={() => navigateTo('/login', 'login')}
         />
       ) : (
         <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500 selection:text-slate-950 flex flex-col">
@@ -122,7 +157,8 @@ export default function App() {
             activeSource={activeSource}
             currentVitals={currentVitals}
             openHardwareModal={() => setIsHardwareModalOpen(true)}
-            onOpenLogin={() => setActiveRole('login')}
+            onOpenLogin={() => navigateTo('/login', 'login')}
+            onNavigate={navigateTo}
           />
 
           {/* Main Content Router View */}

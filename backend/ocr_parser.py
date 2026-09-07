@@ -1,5 +1,5 @@
 """
-MediKiosk Dynamic Clinical NLP & History Synthesis Engine (SIH26047)
+MediKiosk Dynamic Clinical NLP & History Synthesis Engine
 Advanced medical OCR text normalizer, Indian & global brand drug entity extractor,
 paper vitals parser, and clinical history synthesis engine.
 """

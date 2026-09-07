@@ -1,4 +1,4 @@
-# MediKiosk (SIH26047) - REST API Documentation for Teammates
+# MediKiosk - REST API Documentation for Teammates
 
 This document provides a complete guide to all backend REST API endpoints available on `http://localhost:5000`. Teammates can import `backend/postman_collection.json` into Postman to test APIs in 1 click.
 

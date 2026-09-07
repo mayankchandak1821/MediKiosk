@@ -150,8 +150,8 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-extrabold text-lg text-slate-100">Physician Consultation EMR Portal</h2>
-              <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 font-mono text-xs font-bold border border-teal-500/30">
-                SESSION #{opdSessionNumber}
+              <span className="text-xs text-[#59C749] font-semibold">
+                Session #{opdSessionNumber}
               </span>
             </div>
             <p className="text-xs text-slate-400">Pre-formatted AI Clinical Extraction & History Synthesis</p>
@@ -285,19 +285,19 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                       <span className="text-[10px] text-slate-400 font-mono">{enc.timestamp}</span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+                    <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
                       <span>{enc.symptomCategory || 'Routine OPD'}</span>
                       {isSigned ? (
-                        <span className="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-extrabold text-[10px] uppercase flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" /> SIGNED OFF
+                        <span className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Signed Off
                         </span>
                       ) : enc.triage?.isRedFlag ? (
-                        <span className="px-2 py-0.5 rounded bg-rose-500 text-slate-950 font-black text-[10px] uppercase animate-pulse">
-                          {enc.triage?.riskPercentage ? `${enc.triage.riskPercentage}% RED FLAG` : 'RED FLAG'}
+                        <span className="text-xs text-rose-400 font-bold">
+                          {enc.triage?.riskPercentage ? `${enc.triage.riskPercentage}% Red Flag` : 'Red Flag'}
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono text-[10px] font-bold">
-                          {enc.triage?.riskPercentage ? `${enc.triage.riskPercentage}% ROUTINE` : 'ROUTINE'}
+                        <span className="text-xs text-[#59C749] font-medium">
+                          {enc.triage?.riskPercentage ? `${enc.triage.riskPercentage}% Routine` : 'Routine'}
                         </span>
                       )}
                     </div>
@@ -321,7 +321,7 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-extrabold text-lg text-slate-100">{selected.patient?.full_name || 'Patient Name'}</h3>
-                      <span className="text-xs px-2 py-0.5 rounded bg-teal-500/10 border border-teal-500/30 text-teal-300 font-mono">
+                      <span className="text-xs text-slate-400">
                         {selected.patient?.gender || 'M'}, {selected.patient?.age || '52'} Yrs
                       </span>
                     </div>
@@ -370,8 +370,8 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                       AI History Synthesis: Prescription History vs Today's OPD Problem
                     </h4>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-bold uppercase">
-                    COMPARATIVE SYNTHESIS
+                  <span className="text-xs text-cyan-400 font-semibold">
+                    Comparative Synthesis
                   </span>
                 </div>
 
@@ -456,7 +456,7 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                         Clinical Decision Tree & Differential Diagnosis Probability
                       </h4>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-300 font-bold uppercase">
+                    <span className="text-xs text-rose-400 font-semibold">
                       {selected.decisionTreeEval.riskPercentage}% Ischemic Risk
                     </span>
                   </div>
@@ -510,8 +510,8 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                       AI Extracted Key Clinical Highlights (5-Second Review)
                     </h4>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/10 border border-teal-500/30 text-teal-300 font-bold uppercase">
-                    AI SYNTHESIS ACTIVE
+                  <span className="text-xs text-[#59C749] font-semibold">
+                    Clinical Highlights
                   </span>
                 </div>
 

@@ -260,13 +260,13 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </span>
             <div>
               <h2 className="font-bold text-slate-100 text-sm">
-                {step === 1 && (isHindi ? 'चरण 1: मरीज़ पंजीकरण एवं आभा सत्यापन' : 'Step 1: Patient Sign Up & ABHA Authentication')}
-                {step === 2 && (isHindi ? 'चरण 2: चित्रात्मक लक्षण चयन एवं नैदानिक प्रश्नोत्तरी' : 'Step 2: Pictorial Intake & Clinical Questionnaire')}
-                {step === 3 && (isHindi ? 'चरण 3: पर्चा एवं लैब रिपोर्ट स्कैनर' : 'Step 3: Medical Document OCR Scanner')}
-                {step === 4 && (isHindi ? 'चरण 4: ओपीडी समीक्षा एवं डॉक्टर प्रेषण' : 'Step 4: Final OPD Review & Doctor Routing')}
+                {step === 1 && 'Step 1: Patient Registration & Health Account Authentication'}
+                {step === 2 && 'Step 2: Visual Intake & Clinical Questionnaire'}
+                {step === 3 && 'Step 3: Medical Document OCR Scanner'}
+                {step === 4 && 'Step 4: Final Clinical Review & Doctor Queue Routing'}
               </h2>
               <p className="text-xs text-slate-400">
-                {isHindi ? 'प्राथमिक स्वास्थ्य केंद्र एवं अस्पताल ओपीडी हेतु डिजिटल कियोस्क' : 'Self-service digital intake kiosk for Primary Health Centers & Hospital OPDs'}
+                Self-service digital intake kiosk for Primary Health Centers & Hospital OPDs
               </p>
             </div>
           </div>
@@ -286,40 +286,33 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
 
       {/* Doctor Availability Status Banner */}
       {!isDoctorAvailable && (
-        <div className="bg-amber-500/10 border-2 border-amber-500/50 rounded-2xl p-4 text-amber-200 flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-xs uppercase">
-              PAUSED
-            </div>
-            <div>
-              <h4 className="font-extrabold text-amber-300 text-sm">OPD Physician Currently Unavailable / On Break</h4>
-              <p className="text-xs text-amber-200/80">Your intake will be priority queued for OPD Session #{opdSessionNumber + 1}.</p>
-            </div>
+        <div className="bg-amber-500/10 border border-amber-500/40 rounded-xl p-4 text-amber-200 flex flex-wrap items-center justify-between gap-3 shadow-md">
+          <div>
+            <h4 className="font-bold text-amber-300 text-sm">OPD Physician Currently On Break</h4>
+            <p className="text-xs text-amber-200/80">Your intake will be automatically queued for OPD Session #{opdSessionNumber + 1}.</p>
           </div>
-          <span className="text-xs font-mono font-bold px-3 py-1 bg-amber-500/20 rounded-lg border border-amber-500/30">
-            SLOT: SESSION #{opdSessionNumber + 1}
+          <span className="text-xs text-amber-300 font-semibold">
+            Next Slot: Session #{opdSessionNumber + 1}
           </span>
         </div>
       )}
       {triage.isRedFlag && (
-        <div className="bg-rose-500/10 border-2 border-rose-500/50 rounded-2xl p-4 text-rose-200 flex items-start gap-4 animate-pulse shadow-lg shadow-rose-500/10">
-          <div className="p-2 bg-rose-500 text-slate-950 rounded-xl font-bold">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
+        <div className="bg-rose-500/10 border border-rose-500/50 rounded-xl p-4 text-rose-200 flex items-start gap-3.5 shadow-md">
+          <AlertTriangle className="w-5 h-5 text-rose-400 mt-0.5 shrink-0" />
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-rose-400 text-base uppercase tracking-wider">
-                Emergency Priority Triage Flagged (Red Flag Alert)
+              <h3 className="font-bold text-rose-300 text-sm">
+                Emergency Priority Triage Flagged
               </h3>
-              <span className="px-2.5 py-0.5 rounded-full bg-rose-500 text-slate-950 font-black text-xs">CRITICAL</span>
+              <span className="text-xs text-rose-400 font-bold">Priority Red Flag</span>
             </div>
-            <p className="text-xs text-rose-200/90 mt-1 font-medium">
-              High-priority physiological or clinical indicators detected. Encounter will skip routine queueing for immediate nursing triage.
+            <p className="text-xs text-rose-200/90 mt-1">
+              High-priority clinical indicators detected. Encounter will be routed for immediate medical officer evaluation.
             </p>
-            <ul className="mt-2 text-xs font-mono space-y-1 text-rose-300">
+            <ul className="mt-2 text-xs space-y-1 text-rose-300">
               {triage.redFlags.map((flag, idx) => (
                 <li key={idx} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> {flag}
+                  <span>• {flag}</span>
                 </li>
               ))}
             </ul>
@@ -369,8 +362,8 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                   <span className="text-xs font-bold text-teal-400 uppercase tracking-widest flex items-center gap-1.5">
                     <QrCode className="w-4 h-4" /> Official ABHA Health Card
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono border border-emerald-500/30">
-                    VERIFIED ABDM
+                  <span className="text-xs text-[#59C749] font-medium">
+                    Verified ABDM
                   </span>
                 </div>
                 <div>
@@ -566,7 +559,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-sm text-slate-100">Bhashini Multilingual Voice Capture</span>
-                  {isListening && <span className="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/30 font-mono">LISTENING LIVE</span>}
+                  {isListening && <span className="text-xs text-rose-400 font-semibold">• Listening</span>}
                 </div>
                 <p className="text-xs text-slate-400 italic">
                   {voiceTranscript ? `"${voiceTranscript}"` : 'Speak naturally or tap Routine Checkup / symptom options on screen.'}
@@ -597,12 +590,12 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* Option 1: ROUTINE CHECKUP (GREEN - NO RED FLAGS) */}
+              {/* Option 1: ROUTINE CHECKUP */}
               <button
                 onClick={() => handleCategorySelect('routine_checkup')}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   selectedCategory === 'routine_checkup'
-                    ? 'bg-gradient-to-br from-emerald-500/20 via-slate-900 to-teal-500/10 border-emerald-400 shadow-lg shadow-emerald-500/10'
+                    ? 'bg-emerald-500/15 border-emerald-400 shadow-sm'
                     : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                 }`}
               >
@@ -612,10 +605,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                   </span>
                   <h4 className="font-bold text-xs text-slate-100">Routine OPD Checkup</h4>
                 </div>
-                <p className="text-[11px] text-slate-400">General wellness, BP, Sugar & Routine Physical Evaluation.</p>
-                <span className="mt-2 inline-block text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 font-mono font-bold rounded">
-                  ROUTINE QUEUE
-                </span>
+                <p className="text-xs text-slate-400">General wellness, BP, Sugar & Routine Physical Evaluation.</p>
               </button>
 
               {/* Option 2: AYUSH WELLNESS */}
@@ -623,7 +613,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                 onClick={() => handleCategorySelect('ayush_wellness')}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   selectedCategory === 'ayush_wellness'
-                    ? 'bg-gradient-to-br from-amber-500/20 via-slate-900 to-yellow-500/10 border-amber-400 shadow-lg shadow-amber-500/10'
+                    ? 'bg-amber-500/15 border-amber-400 shadow-sm'
                     : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                 }`}
               >
@@ -633,10 +623,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                   </span>
                   <h4 className="font-bold text-xs text-slate-100">AYUSH Wellness</h4>
                 </div>
-                <p className="text-[11px] text-slate-400">Prakriti assessment, Agni evaluation & Ayurvedic counseling.</p>
-                <span className="mt-2 inline-block text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-400 font-mono font-bold rounded">
-                  AYUSH OPD
-                </span>
+                <p className="text-xs text-slate-400">Prakriti assessment, Agni evaluation & Ayurvedic counseling.</p>
               </button>
 
               {/* Option 3: FEVER */}
@@ -644,7 +631,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                 onClick={() => handleCategorySelect('fever')}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   selectedCategory === 'fever'
-                    ? 'bg-gradient-to-br from-amber-500/20 via-slate-900 to-orange-500/10 border-amber-400 shadow-lg'
+                    ? 'bg-amber-500/15 border-amber-400 shadow-sm'
                     : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                 }`}
               >
@@ -654,10 +641,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                   </span>
                   <h4 className="font-bold text-xs text-slate-100">Fever & Infection</h4>
                 </div>
-                <p className="text-[11px] text-slate-400">High temperature, flu-like symptoms & chills.</p>
-                <span className="mt-2 inline-block text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-300 font-mono font-bold rounded">
-                  INFLAMMATION
-                </span>
+                <p className="text-xs text-slate-400">High temperature, flu-like symptoms & chills.</p>
               </button>
 
               {/* Option 4: CHEST PAIN / EMERGENCY */}
@@ -665,7 +649,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                 onClick={() => handleCategorySelect('chest_pain')}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   selectedCategory === 'chest_pain'
-                    ? 'bg-gradient-to-br from-rose-500/20 via-slate-900 to-red-500/10 border-rose-500 shadow-lg shadow-rose-500/10'
+                    ? 'bg-rose-500/15 border-rose-500 shadow-sm'
                     : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                 }`}
               >
@@ -675,10 +659,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                   </span>
                   <h4 className="font-bold text-xs text-slate-100">Chest Pain / Emergency</h4>
                 </div>
-                <p className="text-[11px] text-slate-400">Squeezing pressure, breathlessness or pain radiating to arm.</p>
-                <span className="mt-2 inline-block text-[10px] px-2 py-0.5 bg-rose-500/20 text-rose-300 font-mono font-bold rounded">
-                  RED FLAG TRIAGE
-                </span>
+                <p className="text-xs text-slate-400">Squeezing pressure, breathlessness or pain radiating to arm.</p>
               </button>
             </div>
           </div>
@@ -873,7 +854,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 md:col-span-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">SOCRATES / AYUSH Intake Summary</h4>
-                <span className="text-xs px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 font-bold uppercase">{careMode}</span>
+                <span className="text-xs text-[#59C749] font-medium capitalize">{careMode} Care Mode</span>
               </div>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>

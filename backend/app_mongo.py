@@ -93,7 +93,7 @@ def mongo_dashboard():
             <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-teal-400">🍃 MediKiosk MongoDB REST API Server</h1>
-                    <p class="text-slate-400 text-xs mt-1">SIH26047 Database & API Service connected to MongoDB</p>
+                    <p class="text-slate-400 text-xs mt-1">Database & API Service connected to MongoDB</p>
                 </div>
                 <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 font-mono text-xs rounded-lg font-bold">
                     MONGODB: {{ 'ONLINE' if is_mongo else 'STANDBY DEMO' }}

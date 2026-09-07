@@ -1,6 +1,6 @@
 """
-MediKiosk MongoDB Collections & Document Schemas (SIH26047)
-Supports local MongoDB (mongodb://localhost:27017/medikiosk) and MongoDB Atlas Cloud URIs.
+MediKiosk MongoDB Collections & Document Schemas
+Schema reference definitions for MongoDB BSON records.
 """
 
 from datetime import datetime, timezone

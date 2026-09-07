@@ -55,7 +55,7 @@ INDEX_HTML_TEMPLATE = """
                     <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
                     <h1 class="text-2xl font-extrabold text-white">MediKiosk REST API Server</h1>
                 </div>
-                <p class="text-slate-400 text-sm mt-1">Backend service for SIH26047 Digital Clinical Intake Platform</p>
+                <p class="text-slate-400 text-sm mt-1">Backend service for MediKiosk Digital Clinical Intake Platform</p>
             </div>
             <span class="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold rounded-lg">
                 STATUS: ONLINE (PORT 5000)
@@ -132,7 +132,109 @@ def handle_vitals():
     # GET Request: Return latest vitals
     return jsonify(latest_vitals_cache), 200
 
-# --- 2. PATIENT & ABHA AUTHENTICATION ---
+# Import ABDM V3 Service
+from abdm_service import abdm_client
+
+# --- 2. PATIENT & ABDM V3 ABHA SERVICES ---
+
+@app.route('/api/abdm/enroll/request-otp', methods=['POST'])
+def abdm_enroll_request_otp():
+    """Section 3.0 Step 1: Generate Aadhaar OTP for ABHA creation."""
+    data = request.json or {}
+    aadhaar_number = data.get("aadhaar", "")
+    result = abdm_client.request_aadhaar_enroll_otp(aadhaar_number)
+    status_code = 200 if result.get("success") else 400
+    return jsonify(result), status_code
+
+@app.route('/api/abdm/enroll/verify-otp', methods=['POST'])
+def abdm_enroll_verify_otp():
+    """Section 3.0 Step 3: Enrol ABHA via Aadhaar OTP with mandatory v1.4 consent."""
+    data = request.json or {}
+    txn_id = data.get("txnId", "")
+    otp = data.get("otp", "")
+    mobile = data.get("mobile", "")
+    consent = data.get("consent", {})
+    full_name = data.get("full_name", "")
+
+    result = abdm_client.enrol_by_aadhaar(
+        txn_id=txn_id,
+        otp=otp,
+        mobile=mobile,
+        consent=consent,
+        full_name=full_name
+    )
+
+    if result.get("success"):
+        profile = result.get("ABHAProfile", {})
+        with Session(engine) as session:
+            stmt = select(Patient).where(Patient.abha_id == profile.get("ABHANumber"))
+            existing = session.scalars(stmt).first()
+            if not existing:
+                new_patient = Patient(
+                    abha_id=profile.get("ABHANumber"),
+                    abha_number=profile.get("ABHANumber"),
+                    phr_address=profile.get("phrAddress", [""])[0] if profile.get("phrAddress") else None,
+                    full_name=profile.get("name", "New Patient"),
+                    gender=profile.get("gender", "M"),
+                    phone_number=profile.get("mobile", mobile),
+                    preferred_language="en",
+                    profile_photo=profile.get("photo"),
+                    kyc_verified=True,
+                    address_details={
+                        "address": profile.get("address"),
+                        "stateName": profile.get("stateName"),
+                        "districtName": profile.get("districtName"),
+                        "pinCode": profile.get("pinCode")
+                    },
+                    consent_record=consent
+                )
+                session.add(new_patient)
+                session.commit()
+        return jsonify(result), 200
+    return jsonify(result), 400
+
+@app.route('/api/abdm/enroll/suggestions', methods=['GET'])
+def abdm_address_suggestions():
+    """Section 3.0 Step 6a: Get suggested custom ABHA addresses."""
+    txn_id = request.args.get("txnId", "")
+    name = request.args.get("name", "Rajesh Verma")
+    result = abdm_client.get_address_suggestions(txn_id, name)
+    return jsonify(result), 200
+
+@app.route('/api/abdm/enroll/create-address', methods=['POST'])
+def abdm_create_custom_address():
+    """Section 3.0 Step 6b: Link custom preferred ABHA address."""
+    data = request.json or {}
+    txn_id = data.get("txnId", "")
+    abha_address = data.get("abhaAddress", "")
+    result = abdm_client.create_custom_abha_address(txn_id, abha_address)
+    return jsonify(result), 200
+
+@app.route('/api/abdm/login/request-otp', methods=['POST'])
+def abdm_login_request_otp():
+    """Section 6.3 Step 1: Generate Login OTP via Mobile/ABHA."""
+    data = request.json or {}
+    identifier = data.get("identifier", "")
+    login_hint = data.get("loginHint", "mobile")
+    result = abdm_client.request_login_otp(identifier, login_hint)
+    return jsonify(result), 200 if result.get("success") else 400
+
+@app.route('/api/abdm/login/verify-otp', methods=['POST'])
+def abdm_login_verify_otp():
+    """Section 6.3 Step 2: Verify Login OTP and fetch ABHA accounts."""
+    data = request.json or {}
+    txn_id = data.get("txnId", "")
+    otp = data.get("otp", "")
+    consent = data.get("consent", {"code": "abha-enrollment", "version": "1.4"})
+    result = abdm_client.verify_login_otp(txn_id, otp, consent)
+    return jsonify(result), 200 if result.get("success") else 400
+
+@app.route('/api/abdm/card', methods=['POST'])
+def abdm_generate_card():
+    """Section 9.0 & 10.0: Generate Digital ABHA Health Card payload & QR."""
+    data = request.json or {}
+    result = abdm_client.generate_abha_card_data(data)
+    return jsonify(result), 200
 
 @app.route('/api/patients', methods=['POST'])
 def register_or_get_patient():
@@ -147,10 +249,16 @@ def register_or_get_patient():
         if not patient:
             patient = Patient(
                 abha_id=abha_id,
+                abha_number=data.get("abha_number", abha_id),
+                phr_address=data.get("phr_address", f"{abha_id.replace('-', '')}@abdm"),
                 full_name=data.get("full_name", "Rajesh Verma"),
                 gender=data.get("gender", "Male"),
                 phone_number=data.get("phone_number", "9876543210"),
-                preferred_language=data.get("preferred_language", "en")
+                preferred_language=data.get("preferred_language", "en"),
+                profile_photo=data.get("profile_photo"),
+                kyc_verified=bool(data.get("kyc_verified", True)),
+                address_details=data.get("address_details", {}),
+                consent_record=data.get("consent_record", {"code": "abha-enrollment", "version": "1.4"})
             )
             session.add(patient)
             session.commit()
@@ -159,10 +267,14 @@ def register_or_get_patient():
         return jsonify({
             "id": patient.id,
             "abha_id": patient.abha_id,
+            "abha_number": patient.abha_number,
+            "phr_address": patient.phr_address,
             "full_name": patient.full_name,
             "gender": patient.gender,
             "phone_number": patient.phone_number,
-            "preferred_language": patient.preferred_language
+            "preferred_language": patient.preferred_language,
+            "kyc_verified": patient.kyc_verified,
+            "profile_photo": patient.profile_photo
         }), 200
 
 # --- 3. MEDICAL DOCUMENT OCR INTELLIGENCE ---

@@ -1,6 +1,6 @@
 # MediKiosk Backend API & Hardware Service
 
-Production-ready Python Flask backend for **MediKiosk (SIH26047)**.
+Production-ready Python Flask backend for **MediKiosk** digital clinical intake platform.
 
 ## Features
 - **Flask REST API**: Endpoints for Patient Registration, Vitals Telemetry, OCR Entity Extraction, Emergency Triage, and ABDM FHIR R4 document generation.

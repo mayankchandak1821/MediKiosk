@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "MediKiosk (SIH26047) API Collection",
+    "name": "MediKiosk API Collection",
     "description": "Postman Collection for MediKiosk Flask Backend APIs (Patient ABHA, Vitals Stream, OCR, Triage, and ABDM FHIR Export).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

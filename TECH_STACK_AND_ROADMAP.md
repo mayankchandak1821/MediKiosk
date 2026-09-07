@@ -1,7 +1,7 @@
-# MediKiosk (SIH26047) - Tech Stack & Technical Roadmap
+# MediKiosk - Tech Stack & Technical Roadmap
 
 **Project Title**: MediKiosk - AI-Powered Digital Clinical Intake & Vitals Platform with Multimodal Voice, Touch, Document OCR, and ABDM FHIR Integration  
-**Hackathon Problem Statement**: SIH26047 (Ministry of Ayush / AIIA)
+**Initiative**: Ministry of Ayush / AIIA Digital Health Platform
 
 ---
 
