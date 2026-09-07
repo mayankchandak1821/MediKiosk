@@ -238,6 +238,32 @@ def process_ocr_document():
         print("OCR Scan Route Error:", err)
         return jsonify({"success": False, "error": str(err)}), 500
 
+# --- 3B. LOCAL OLLAMA DYNAMIC QUESTIONING ---
+
+@app.route('/api/ai/next-question', methods=['POST'])
+def generate_next_ai_question():
+    """Generate one validated local Ollama question or signal frontend fallback."""
+    data = request.json or {}
+
+    try:
+        from ollama_question_harness import generate_question
+
+        result = generate_question(
+            chief_complaint=data.get('chief_complaint', ''),
+            track=data.get('track', 'allopathy'),
+            module=data.get('module', 'general'),
+            prior_qa=data.get('prior_qa', []),
+            last_answer=data.get('last_answer', ''),
+        )
+        return jsonify({"success": True, "question": result}), 200
+    except Exception as err:
+        app.logger.warning("[AI_FALLBACK] %s", err)
+        return jsonify({
+            "success": False,
+            "fallback": "decision_tree",
+            "error": "Local AI question generation unavailable",
+        }), 503
+
 # --- 4. CLINICAL ENCOUNTER, TRIAGE & ABDM FHIR BUNDLE ---
 
 def evaluate_emergency_triage(answers, vitals):
@@ -309,6 +335,7 @@ def create_encounter():
     data = request.json or {}
     patient_info = data.get("patient", {})
     answers = data.get("answers", {})
+    ai_answers = data.get("aiAnswers", {})
     vitals = data.get("vitals", latest_vitals_cache)
     care_mode = data.get("careMode", "allopathy")
     ocr_data = data.get("scannedDoc", {})
@@ -334,8 +361,8 @@ def create_encounter():
         encounter = Encounter(
             patient_id=patient.id,
             care_mode=care_mode,
-            chief_complaint=data.get("symptomCategory", "General Intake"),
-            hpi_data=answers,
+            chief_complaint=data.get("chief_complaint") or data.get("symptomCategory", "General Intake"),
+            hpi_data={**answers, "ai_follow_up": ai_answers},
             ayush_data=answers if care_mode == "ayush" else None,
             vitals=vitals,
             is_red_flag=triage["is_red_flag"],

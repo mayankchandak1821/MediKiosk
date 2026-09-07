@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:backend": "python3 backend/app.py",
+    "dev:hardware": "python3 backend/hardware_bridge.py",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"

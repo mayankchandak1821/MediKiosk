@@ -12,6 +12,7 @@ import VisualPainScale from './VisualPainScale';
 import VisualVitalsGauges from './VisualVitalsGauges';
 import VisualDocumentScanner from './VisualDocumentScanner';
 import ClinicalDecisionTreeWizard from './ClinicalDecisionTreeWizard';
+import AIQuestionPanel from './AIQuestionPanel';
 import { decisionTreeEngine } from '../services/decisionTreeEngine';
 
 export default function KioskIntake({ currentVitals, onEncounterSubmit, language, isDoctorAvailable = true, opdSessionNumber = 1, initialStep = 2 }) {
@@ -45,59 +46,82 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
   // Clinical Intake Mode: 'allopathy' | 'ayush'
   const [careMode, setCareMode] = useState('allopathy');
 
-  // Intake Questionnaire State (DEFAULT TO ROUTINE CHECKUP - NO RED FLAGS)
+  // ─── FIXED Q1: Chief Complaint ────────────────────────────────────────────
+  // Must be answered before ANY downstream logic (body map, category detection,
+  // decision tree) is allowed to run.
+  const [chiefComplaint, setChiefComplaint] = useState('');
+  const [chiefComplaintInput, setChiefComplaintInput] = useState('');
+  // Gate: true only after patient has explicitly submitted their chief complaint.
+  const [chiefComplaintSubmitted, setChiefComplaintSubmitted] = useState(false);
+
+  // Pain-keyword check — only evaluated after chief_complaint is captured.
+  const PAIN_KEYWORDS = ['pain', 'ache', 'aching', 'hurt', 'hurts', 'hurting', 'sore', 'soreness',
+    'burning', 'throbbing', 'cramp', 'cramps', 'discomfort', 'tender', 'stiff', 'stiffness',
+    'दर्द', 'पीड़ा', 'दुखना', 'जलन'];
+  const complaintHasPain = (text) => {
+    const lower = (text || '').toLowerCase();
+    return PAIN_KEYWORDS.some(kw => lower.includes(kw));
+  };
+
+  // Intake Questionnaire State — starts truly empty; no pre-filled defaults
+  // that would cause triage to fire before the patient has answered anything.
   const [selectedCategory, setSelectedCategory] = useState('routine_checkup');
   const [answers, setAnswers] = useState({
-    site: 'head_forehead',
-    onset: 'gradual_hours',
-    character: 'dull_aching',
+    site: '',
+    onset: '',
+    character: '',
     radiation: 'none',
     associations: [],
-    severity: 2,
+    severity: 0,
     // AYUSH
-    prakriti: 'pitta',
-    agni: 'samagni',
-    koshtha: 'madhyama',
-    ahara_vihara: ['regular_diet']
+    prakriti: '',
+    agni: '',
+    koshtha: '',
+    ahara_vihara: []
   });
 
-  // Clinical Decision Tree State
-  const [treeAnswers, setTreeAnswers] = useState({
-    chest_character: 'crushing_pressure',
-    chest_radiation: 'rad_arm_jaw_neck',
-    chest_triggers: 'trig_exertion',
-    chest_associated: ['assoc_sweating', 'assoc_dyspnea'],
-    chest_risk_history: ['hx_cad', 'hx_htn']
-  });
+  // Clinical Decision Tree State — starts empty so the evaluator does not
+  // produce red-flag scores before the patient has touched anything.
+  const [treeAnswers, setTreeAnswers] = useState({});
+  const [aiAnswers, setAiAnswers] = useState({});
+  const [aiFallback, setAiFallback] = useState(false);
+  const [aiIntakeComplete, setAiIntakeComplete] = useState(false);
 
   // Voice AI Recognition State
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
-  const [aiSpeechPrompt, setAiSpeechPrompt] = useState('Welcome. Select Routine Checkup or tap your symptom category below.');
+  const [aiSpeechPrompt, setAiSpeechPrompt] = useState(
+    'Welcome to MediKiosk. What is bringing you in today? Please describe what is bothering you.'
+  );
 
   // Document OCR State
   const [scannedDoc, setScannedDoc] = useState(SAMPLE_OCR_TEMPLATES[0].extracted);
 
-  // Evaluate Decision Tree & Triage Realtime
-  const decisionTreeEval = decisionTreeEngine.evaluateChestPainTree(treeAnswers, currentVitals);
-  const triage = selectedCategory === 'chest_pain' && decisionTreeEval.isRedFlag
+  // Evaluate Decision Tree & Triage Realtime — only meaningful after the patient
+  // has submitted a chief complaint; before that we return a safe neutral object.
+  const decisionTreeEval = chiefComplaintSubmitted
+    ? decisionTreeEngine.evaluateChestPainTree(treeAnswers, currentVitals)
+    : { isRedFlag: false, priority: 'ROUTINE', riskPercentage: 0, redFlags: [], differentials: [] };
+  const triage = chiefComplaintSubmitted && selectedCategory === 'chest_pain' && decisionTreeEval.isRedFlag
     ? { priority: decisionTreeEval.priority, isRedFlag: true, riskPercentage: decisionTreeEval.riskPercentage, riskLevel: 'HIGH_CRITICAL', redFlags: decisionTreeEval.redFlags }
-    : clinicalEngine.evaluateTriage(answers, currentVitals);
+    : chiefComplaintSubmitted
+      ? clinicalEngine.evaluateTriage(answers, currentVitals)
+      : { isRedFlag: false, priority: 'ROUTINE', riskPercentage: 0, riskLevel: 'ROUTINE', redFlags: [] };
 
   // Reset to Routine Checkup Defaults
   const applyRoutineCheckupDefaults = () => {
     setSelectedCategory('routine_checkup');
     setAnswers({
-      site: 'head_forehead',
-      onset: 'gradual_hours',
-      character: 'dull_aching',
+      site: '',
+      onset: '',
+      character: '',
       radiation: 'none',
       associations: [],
-      severity: 2,
-      prakriti: 'pitta',
-      agni: 'samagni',
-      koshtha: 'madhyama',
-      ahara_vihara: ['regular_diet']
+      severity: 0,
+      prakriti: '',
+      agni: '',
+      koshtha: '',
+      ahara_vihara: []
     });
   };
 
@@ -170,6 +194,18 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
         }
         setVoiceTranscript(transcriptStr);
 
+        // ── GUARD: category keyword matching must NOT run against empty/default
+        // state.  It only runs after the patient has submitted their chief
+        // complaint (chiefComplaintSubmitted === true).
+        // Before that, voice input feeds directly into the chief complaint field.
+        if (!chiefComplaintSubmitted) {
+          // Live-populate the chief complaint text area with voice input so the
+          // patient can review & confirm it.
+          setChiefComplaintInput(transcriptStr);
+          return; // do not attempt category detection yet
+        }
+
+        // Post-complaint: voice can still switch category context
         const lower = transcriptStr.toLowerCase();
         if (lower.includes('routine') || lower.includes('checkup') || lower.includes('सामान्य')) {
           applyRoutineCheckupDefaults();
@@ -195,7 +231,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
     return () => {
       if (recognition) try { recognition.stop(); } catch (e) {}
     };
-  }, [isListening, language]);
+  }, [isListening, language, chiefComplaintSubmitted]);
 
   const speakPrompt = (text) => {
     setAiSpeechPrompt(text);
@@ -204,6 +240,30 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.95;
       window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // ─── Chief Complaint Submission Handler ───────────────────────────────────
+  // Called when the patient confirms their Q1 answer (button click or Enter).
+  // Stores the exact patient words, then runs the pain-keyword check to decide
+  // whether the body map should appear downstream.
+  const handleSubmitChiefComplaint = () => {
+    const trimmed = chiefComplaintInput.trim();
+    if (!trimmed) return; // do not proceed on empty input
+    setChiefComplaint(trimmed);
+    setChiefComplaintSubmitted(true);
+    setAiAnswers({});
+    setAiFallback(false);
+    setAiIntakeComplete(false);
+
+    // Pain-keyword branching: body map will only show if this returns true.
+    // Run against the actual patient-provided text — never against a default.
+    if (complaintHasPain(trimmed)) {
+      // Leave selectedCategory as-is (routine_checkup default) until the patient
+      // uses the body map or category cards to further specify.
+      speakPrompt('Thank you. We noticed you mentioned pain. Please point to where on your body the pain is located.');
+    } else {
+      speakPrompt('Thank you. We\'ll now ask a few more questions about your concern.');
     }
   };
 
@@ -222,9 +282,12 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       patient,
       careMode,
+      // Fixed Q1: patient's exact words, captured before any other branching
+      chief_complaint: chiefComplaint,
       symptomCategory: selectedCategory === 'routine_checkup' ? 'Routine OPD General Checkup' : SYMPTOM_CATEGORIES.find(c => c.id === selectedCategory)?.name,
       answers,
       treeAnswers,
+      aiAnswers,
       decisionTreeEval,
       vitals: currentVitals,
       triage,
@@ -532,8 +595,11 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
               <button
                 onClick={() => {
                   setStep(2);
+                  setChiefComplaintSubmitted(false);
+                  setChiefComplaintInput('');
+                  setChiefComplaint('');
                   applyRoutineCheckupDefaults();
-                  speakPrompt('Welcome to MediKiosk. Please select Routine Checkup or tap your symptoms below.');
+                  speakPrompt('Welcome to MediKiosk. What is bringing you in today? Please describe what is bothering you.');
                 }}
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-bold rounded-xl shadow-lg transition-all"
               >
@@ -566,7 +632,11 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                   {isListening && <span className="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/30 font-mono">LISTENING LIVE</span>}
                 </div>
                 <p className="text-xs text-slate-400 italic">
-                  {voiceTranscript ? `"${voiceTranscript}"` : 'Speak naturally or tap Routine Checkup / symptom options on screen.'}
+                  {voiceTranscript
+                    ? `"${voiceTranscript}"`
+                    : chiefComplaintSubmitted
+                      ? 'Speak naturally or tap symptom options on screen.'
+                      : 'Speak to describe what is bringing you in today — your words will appear below.'}
                 </p>
               </div>
             </div>
@@ -579,6 +649,103 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </button>
           </div>
 
+          {/* ── FIXED Q1: Chief Complaint Card ──────────────────────────────────
+              This is ALWAYS the first interaction in every intake session,
+              regardless of track (Allopathic or AYUSH). The category selector,
+              body map, and all downstream logic are hidden until this is answered.
+          */}
+          <div className={`bg-slate-900 border-2 rounded-2xl p-6 shadow-xl space-y-4 ${
+            chiefComplaintSubmitted ? 'border-teal-500/40' : 'border-teal-400'
+          }`}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="p-1.5 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                    <Stethoscope className="w-4 h-4" />
+                  </span>
+                  <span className="text-[11px] font-bold font-mono text-teal-400 uppercase tracking-widest">
+                    Fixed Question 1 of 4 — Chief Complaint
+                  </span>
+                </div>
+                <h3 className="font-extrabold text-slate-100 text-base">
+                  What is bringing you in today?
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Please describe what is bothering you in your own words. You can speak (tap the mic above) or type below.
+                </p>
+              </div>
+              {chiefComplaintSubmitted && (
+                <span className="shrink-0 px-2.5 py-1 rounded-full bg-teal-500/20 border border-teal-500/40 text-teal-300 text-[10px] font-mono font-bold">
+                  ✓ ANSWERED
+                </span>
+              )}
+            </div>
+
+            {!chiefComplaintSubmitted ? (
+              // ── Input phase: patient has NOT yet confirmed their answer ──
+              <div className="space-y-3">
+                <textarea
+                  rows={3}
+                  value={chiefComplaintInput}
+                  onChange={e => setChiefComplaintInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmitChiefComplaint(); } }}
+                  placeholder="e.g. My back has been hurting for 3 days... / I have a fever since yesterday... / I feel very tired..."
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-400 resize-none"
+                />
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] text-slate-500">
+                    {chiefComplaintInput.trim().length > 0
+                      ? `${chiefComplaintInput.trim().length} characters — press Confirm when ready`
+                      : 'Type your complaint or tap the mic and speak'}
+                  </p>
+                  <button
+                    onClick={handleSubmitChiefComplaint}
+                    disabled={!chiefComplaintInput.trim()}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                      chiefComplaintInput.trim()
+                        ? 'bg-gradient-to-r from-teal-400 to-cyan-400 text-slate-950 shadow-lg hover:brightness-110'
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Confirm My Complaint <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // ── Confirmed phase: show the captured answer and detected routing ──
+              <div className="space-y-3">
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
+                  <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1">
+                    chief_complaint (patient's words)
+                  </span>
+                  <p className="text-sm text-slate-100 font-medium leading-relaxed">
+                    "{chiefComplaint}"
+                  </p>
+                </div>
+                <div className={`flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg border ${
+                  complaintHasPain(chiefComplaint)
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                    : 'bg-slate-950 border-slate-800 text-slate-400'
+                }`}>
+                  {complaintHasPain(chiefComplaint) ? (
+                    <><Activity className="w-4 h-4 shrink-0" /> Pain keywords detected — body map location picker is shown below</>
+                  ) : (
+                    <><CheckCircle2 className="w-4 h-4 shrink-0" /> No pain keywords — body map skipped, continuing with follow-up questions</>
+                  )}
+                </div>
+                <button
+                  onClick={() => { setChiefComplaintSubmitted(false); setChiefComplaintInput(chiefComplaint); }}
+                  className="text-xs text-teal-400 hover:underline font-semibold"
+                >
+                  ← Edit my answer
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ── All downstream UI is gated behind chiefComplaintSubmitted ──────── */}
+          {chiefComplaintSubmitted && (
+            <>
           {/* CATEGORY SELECTOR CARDS (ROUTINE CHECKUP VS FEVER VS CHEST PAIN VS AYUSH) */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
@@ -680,20 +847,40 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </div>
           </div>
 
+          {/* Body Map — shown ONLY when chief_complaint contains pain keywords.
+              Guard: complaintHasPain(chiefComplaint) must be true.
+              Never shown for non-pain complaints (e.g. fever, fatigue, rash). */}
+          {complaintHasPain(chiefComplaint) && (
+            <>
           {/* 1. Pictorial Zoomable Anatomical Body Map (Primary Navigation) */}
           <VisualBodyMap
             selectedSite={answers.site}
             onSelectSite={(siteId) => setAnswers({ ...answers, site: siteId })}
             onSelectCategory={(catId) => setSelectedCategory(catId)}
           />
+            </>
+          )}
 
-          {/* 2. DYNAMIC DECISION TREE QUESTIONNAIRE CARDS BELOW ZOOMED BODY MAP */}
-          <ClinicalDecisionTreeWizard
-            category={selectedCategory}
-            vitals={currentVitals}
-            treeAnswers={treeAnswers}
-            onTreeAnswersChange={(updatedTreeAnswers) => setTreeAnswers(updatedTreeAnswers)}
-          />
+          {/* 2. AI questioning starts at question 5; deterministic tree remains fallback. */}
+          {chiefComplaintSubmitted && !aiFallback && !aiIntakeComplete && (
+            <AIQuestionPanel
+              chiefComplaint={chiefComplaint}
+              careMode={careMode}
+              module={selectedCategory}
+              onAnswer={(targetField, value) => setAiAnswers(prev => ({ ...prev, [targetField]: value }))}
+              onFallback={() => setAiFallback(true)}
+              onComplete={() => setAiIntakeComplete(true)}
+            />
+          )}
+
+          {(!chiefComplaintSubmitted || aiFallback) && (
+            <ClinicalDecisionTreeWizard
+              category={selectedCategory}
+              vitals={currentVitals}
+              treeAnswers={treeAnswers}
+              onTreeAnswersChange={(updatedTreeAnswers) => setTreeAnswers(updatedTreeAnswers)}
+            />
+          )}
 
           {/* Vitals Telemetry Gauges with Live Triage Risk Score */}
           <VisualVitalsGauges vitals={currentVitals} answers={answers} activeSource="Peripheral Sensors" />
@@ -799,6 +986,9 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </div>
           </div>
 
+          </>
+          )}
+
           <div className="flex justify-between items-center pt-2">
             <button
               onClick={() => setStep(1)}
@@ -808,7 +998,12 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </button>
             <button
               onClick={() => setStep(3)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-bold rounded-xl shadow-lg transition-all"
+              disabled={!chiefComplaintSubmitted}
+              className={`flex items-center gap-2 px-6 py-3 font-bold rounded-xl shadow-lg transition-all ${
+                chiefComplaintSubmitted
+                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950'
+                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+              }`}
             >
               Proceed to Document Scanner <ChevronRight className="w-5 h-5" />
             </button>
@@ -871,14 +1066,25 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">SOCRATES / AYUSH Intake Summary</h4>
                 <span className="text-xs px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 font-bold uppercase">{careMode}</span>
               </div>
+
+              {/* Chief Complaint — always shown first in the review, in the patient's own words */}
+              <div className="p-3 rounded-lg bg-teal-500/5 border border-teal-500/20">
+                <span className="text-[10px] font-mono text-teal-500 uppercase tracking-widest block mb-1">
+                  Chief Complaint (Q1 — Patient's Words)
+                </span>
+                <p className="text-sm text-slate-100 font-medium leading-relaxed">
+                  {chiefComplaint || <span className="text-slate-500 italic">Not captured</span>}
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-slate-500 block">Symptom Location:</span>
-                  <span className="font-bold text-slate-200">{answers.site}</span>
+                  <span className="font-bold text-slate-200">{answers.site || '—'}</span>
                 </div>
                 <div>
                   <span className="text-slate-500 block">Pain Character:</span>
-                  <span className="font-bold text-slate-200">{answers.character}</span>
+                  <span className="font-bold text-slate-200">{answers.character || '—'}</span>
                 </div>
                 <div>
                   <span className="text-slate-500 block">Radiation:</span>
@@ -886,7 +1092,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                 </div>
                 <div>
                   <span className="text-slate-500 block">Pain Severity:</span>
-                  <span className="font-bold text-amber-400">{answers.severity} / 10</span>
+                  <span className="font-bold text-amber-400">{answers.severity > 0 ? `${answers.severity} / 10` : '—'}</span>
                 </div>
               </div>
             </div>

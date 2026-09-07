@@ -35,38 +35,47 @@ export default function App() {
   const [encounterQueue, setEncounterQueue] = useState([]);
   const [activeEncounter, setActiveEncounter] = useState(null);
 
-  // Sync encounters with MongoDB API on mount
-  useEffect(() => {
-    fetch('http://localhost:5000/api/mongo/encounters')
+  const loadEncounterQueue = () => {
+    return fetch('http://localhost:5000/api/encounters')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           const formatted = data.map(item => ({
-            id: item.encounter_id || item._id,
-            timestamp: new Date(item.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            patient: {
-              abha_id: item.abha_id,
+            id: item.id || item.encounter_id || item._id,
+            timestamp: item.timestamp || new Date(item.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            patient: item.patient || {
+              abha_id: item.abha_id || 'N/A',
               full_name: item.answers?.full_name || 'Patient',
               age: item.answers?.age || 40,
               gender: item.answers?.gender || 'Male',
               phone: item.answers?.phone || '+91 98765 43210'
             },
-            careMode: item.care_mode || 'allopathy',
-            symptomCategory: item.symptom_category || 'Intake',
+            careMode: item.careMode || item.care_mode || 'allopathy',
+            symptomCategory: item.symptomCategory || item.symptom_category || 'Intake',
+            chief_complaint: item.chief_complaint || item.symptomCategory || item.symptom_category || 'General Intake',
             answers: item.answers || {},
+            treeAnswers: item.treeAnswers || {},
+            aiAnswers: item.aiAnswers || item.answers?.ai_follow_up || {},
             vitals: item.vitals || {},
             triage: item.triage || {},
-            scannedDoc: item.scanned_doc,
+            fhirPayload: item.fhirPayload,
+            scannedDoc: item.scannedDoc || item.scanned_doc,
             doctor_notes: item.doctor_notes,
             status: item.status || 'QUEUED'
           }));
           setEncounterQueue(formatted);
-          if (formatted.length > 0) {
-            setActiveEncounter(formatted[0]);
-          }
+          setActiveEncounter(current => current || formatted[0]);
+        } else {
+          setEncounterQueue([]);
+          setActiveEncounter(null);
         }
       })
-      .catch(err => console.warn('MongoDB initial sync fallback:', err));
+      .catch(err => console.warn('Encounter queue sync failed:', err));
+  };
+
+  // Sync the shared doctor/admin queue with the Flask backend.
+  useEffect(() => {
+    loadEncounterQueue();
   }, []);
 
   // Hardware Subscription
@@ -83,13 +92,16 @@ export default function App() {
     setCurrentUser(userDetails);
     setActiveRole(role);
     if (role === 'patient') setPatientSubView('dashboard');
+    if (role === 'doctor' || role === 'admin') loadEncounterQueue();
   };
 
   const handleEncounterSubmit = (newEncounter) => {
     setEncounterQueue(prev => [newEncounter, ...prev]);
     setActiveEncounter(newEncounter);
     setPatientSubView('dashboard');
-    setActiveRole('doctor'); // Switch to Doctor OPD Portal to show queued intake!
+    // Keep the patient portal open; the same record is immediately available
+    // to doctor/admin views through shared state and the backend queue.
+    loadEncounterQueue();
   };
 
   return (

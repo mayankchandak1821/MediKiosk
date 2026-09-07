@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { 
   User, ShieldCheck, Activity, Heart, Thermometer, FileText, Download, 
-  PlusCircle, Calendar, CheckCircle2, Clock, Pill, Stethoscope, ChevronRight, Sparkles, Printer, ScanLine, FileSearch, X, Zap
+  PlusCircle, Calendar, CheckCircle2, Clock, Pill, Stethoscope, ChevronRight, Sparkles, Printer, ScanLine, FileSearch
 } from 'lucide-react';
-import ClinicalDecisionTreeWizard from './ClinicalDecisionTreeWizard';
-import VisualBodyMap from './VisualBodyMap';
-import { decisionTreeEngine } from '../services/decisionTreeEngine';
 
 export default function PatientDashboard({ 
   encounterQueue = [], 
@@ -15,16 +12,6 @@ export default function PatientDashboard({
 }) {
   const [selectedEncounter, setSelectedEncounter] = useState(encounterQueue[0] || null);
 
-  // Decision Tree Modal State
-  const [showTreeModal, setShowTreeModal] = useState(false);
-  const [treeCategory, setTreeCategory] = useState('chest_pain');
-  const [treeAnswers, setTreeAnswers] = useState({
-    chest_character: 'crushing_pressure',
-    chest_radiation: 'rad_arm_jaw_neck',
-    chest_triggers: 'trig_exertion',
-    chest_associated: ['assoc_sweating', 'assoc_dyspnea'],
-    chest_risk_history: ['hx_cad', 'hx_htn']
-  });
 
   // Default demo patient profile if queue is empty
   const patientProfile = selectedEncounter?.patient || {
@@ -34,45 +21,6 @@ export default function PatientDashboard({
     gender: 'Male',
     phone: '+91 98765 43210',
     blood_group: 'O+'
-  };
-
-  const handleCompleteTreeAssessment = (evalData) => {
-    const newEnc = {
-      id: `ENC-${Date.now().toString().slice(-4)}`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      patient: patientProfile,
-      careMode: 'allopathy',
-      symptomCategory: treeCategory === 'chest_pain' ? 'Chest Pain / Emergency' : 'Symptom Assessment',
-      answers: {
-        site: treeAnswers.chest_radiation === 'rad_arm_jaw_neck' ? 'Chest Left & Arm' : 'Chest Center',
-        character: treeAnswers.chest_character === 'crushing_pressure' ? 'Pressure / Heavy Squeezing' : 'Discomfort',
-        severity: evalData.isRedFlag ? 8 : 4,
-        associations: treeAnswers.chest_associated || []
-      },
-      treeAnswers,
-      decisionTreeEval: evalData,
-      vitals: currentVitals,
-      triage: {
-        priority: evalData.priority,
-        isRedFlag: evalData.isRedFlag,
-        riskPercentage: evalData.riskPercentage,
-        riskLevel: evalData.isRedFlag ? 'HIGH_CRITICAL' : 'ROUTINE',
-        redFlags: evalData.redFlags
-      },
-      status: evalData.isRedFlag ? 'PRIORITY_ALERT' : 'QUEUED'
-    };
-
-    setSelectedEncounter(newEnc);
-    encounterQueue.unshift(newEnc);
-
-    // Sync to Backend API
-    fetch('http://localhost:5000/api/encounters', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newEnc)
-    }).catch(err => console.warn('Encounter sync warning:', err));
-
-    setShowTreeModal(false);
   };
 
   const patientEncounters = encounterQueue.filter(
@@ -146,17 +94,13 @@ Status: ${enc.status === 'COMPLETED_SIGNED_OFF' ? 'OFFICIALLY SIGNED OFF BY DOCT
           </div>
         </div>
 
-        {/* 2 Side-by-Side Action Buttons: Describe Illness (Decision Tree) & OCR Detection */}
+        {/* 2 Side-by-Side Action Buttons: AI clinical intake & OCR detection */}
         <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={() => setShowTreeModal(!showTreeModal)}
-            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 ${
-              showTreeModal
-                ? 'bg-rose-500 text-slate-950 hover:bg-rose-400'
-                : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-slate-950 hover:scale-105'
-            }`}
+            onClick={onDescribeIllness}
+            className="px-5 py-2.5 rounded-xl font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-slate-950 hover:scale-105"
           >
-            <FileText className="w-4 h-4" /> {showTreeModal ? 'Close Symptom Decision Tree' : 'Describe Illness (Decision Tree)'}
+            <FileText className="w-4 h-4" /> Start Clinical Intake
           </button>
 
           <button
@@ -167,58 +111,6 @@ Status: ${enc.status === 'COMPLETED_SIGNED_OFF' ? 'OFFICIALLY SIGNED OFF BY DOCT
           </button>
         </div>
       </div>
-
-      {/* INLINE DYNAMIC DECISION TREE SECTION ON PATIENT DASHBOARD */}
-      {showTreeModal && (
-        <div className="bg-slate-900 border-2 border-teal-500/40 rounded-3xl p-5 md:p-6 shadow-2xl space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-            <span className="text-xs font-extrabold text-teal-300 uppercase tracking-wider flex items-center gap-2">
-              <Zap className="w-4 h-4 text-teal-400" /> Interactive Clinical Symptom Decision Tree
-            </span>
-
-            {/* Category Selector Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              {[
-                { id: 'chest_pain', label: 'Chest Pain / Heart' },
-                { id: 'fever', label: 'Fever & Infection' },
-                { id: 'abdominal', label: 'Stomach / Abdominal' },
-                { id: 'respiratory', label: 'Cough / Breathlessness' },
-                { id: 'headache', label: 'Headache / Dizziness' },
-                { id: 'ayush_wellness', label: 'AYUSH Wellness' },
-                { id: 'routine_checkup', label: 'Routine OPD Checkup' }
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setTreeCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition-all border ${
-                    treeCategory === cat.id
-                      ? 'bg-teal-500 text-slate-950 border-teal-400 shadow'
-                      : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 1. Zoomable Pictorial Body Map */}
-          <VisualBodyMap
-            selectedSite={treeAnswers.site}
-            onSelectSite={(siteId) => setTreeAnswers(prev => ({ ...prev, site: siteId }))}
-            onSelectCategory={(catId) => setTreeCategory(catId)}
-          />
-
-          {/* 2. Dynamic Decision Tree Cards for Selected Zoomed Region */}
-          <ClinicalDecisionTreeWizard
-            category={treeCategory}
-            vitals={currentVitals}
-            treeAnswers={treeAnswers}
-            onTreeAnswersChange={(updated) => setTreeAnswers(updated)}
-            onCompleteTree={(evalData) => handleCompleteTreeAssessment(evalData)}
-          />
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: My ABHA Digital Health Card & Vitals History (4 Cols) */}
