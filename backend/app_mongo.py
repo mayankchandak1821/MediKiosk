@@ -12,6 +12,20 @@ import io
 import base64
 import pypdf
 
+try:
+    import pytesseract
+    tesseract_paths = [
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        os.environ.get("TESSERACT_CMD", "")
+    ]
+    for t_path in tesseract_paths:
+        if t_path and os.path.exists(t_path):
+            pytesseract.pytesseract.tesseract_cmd = t_path
+            break
+except Exception:
+    pass
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from models_mongo import create_patient_document, create_encounter_document, create_vitals_telemetry_document
 from ocr_parser import parse_medical_text
