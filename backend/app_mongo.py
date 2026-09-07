@@ -43,6 +43,26 @@ fallback_db = {
     }]
 }
 
+def serialize_mongo(doc):
+    """Recursively convert ObjectId and datetime objects to JSON-serializable types."""
+    if doc is None:
+        return None
+    if isinstance(doc, list):
+        return [serialize_mongo(item) for item in doc]
+    if isinstance(doc, dict):
+        res = {}
+        for k, v in doc.items():
+            if k == '_id':
+                res[k] = str(v)
+            elif isinstance(v, datetime):
+                res[k] = v.isoformat()
+            elif isinstance(v, (dict, list)):
+                res[k] = serialize_mongo(v)
+            else:
+                res[k] = v
+        return res
+    return doc
+
 # --- 1. MONGODB HEALTH & DASHBOARD ROUTE ---
 
 @app.route('/', methods=['GET'])
@@ -93,8 +113,9 @@ def health_check():
 @app.route('/api/mongo/vitals', methods=['GET', 'POST'])
 @app.route('/api/vitals', methods=['GET', 'POST'])
 def mongo_vitals():
+    req_json = request.get_json(silent=True) or {}
     if request.method == 'POST':
-        data = request.json or {}
+        data = req_json or request.form or {}
         doc = create_vitals_telemetry_document(
             data.get("temperature_c", 37.0),
             data.get("heart_rate_bpm", 72),
@@ -106,23 +127,23 @@ def mongo_vitals():
             db.vitals.insert_one(doc)
         else:
             fallback_db["vitals"].append(doc)
-        return jsonify({"message": "Vitals saved to MongoDB collection", "vitals": doc}), 200
+        return jsonify({"message": "Vitals saved to MongoDB collection", "vitals": serialize_mongo(doc)}), 200
 
     if IS_MONGO_ONLINE:
         latest = db.vitals.find_one(sort=[("timestamp", -1)])
-        if latest: latest["_id"] = str(latest["_id"])
     else:
-        latest = fallback_db["vitals"][-1]
+        latest = fallback_db["vitals"][-1] if fallback_db["vitals"] else None
 
-    return jsonify(latest or fallback_db["vitals"][0]), 200
+    return jsonify(serialize_mongo(latest or fallback_db["vitals"][0])), 200
 
 # --- 3. MONGODB PATIENTS API ---
 
 @app.route('/api/mongo/patients', methods=['GET', 'POST'])
 @app.route('/api/patients', methods=['GET', 'POST'])
 def mongo_patients():
+    req_json = request.get_json(silent=True) or {}
     if request.method == 'POST':
-        data = request.json or {}
+        data = req_json or request.form or {}
         doc = create_patient_document(
             data.get("abha_id", "91-8840-2910-4491"),
             data.get("full_name", "Rajesh Verma"),
@@ -142,23 +163,23 @@ def mongo_patients():
             doc["_id"] = f"mongo-pat-{len(fallback_db['patients']) + 1}"
             fallback_db["patients"].append(doc)
 
-        return jsonify(doc), 200
+        return jsonify(serialize_mongo(doc)), 200
 
     if IS_MONGO_ONLINE:
         patients = list(db.patients.find())
-        for p in patients: p["_id"] = str(p["_id"])
     else:
         patients = fallback_db["patients"]
 
-    return jsonify(patients), 200
+    return jsonify(serialize_mongo(patients)), 200
 
 # --- 4. MONGODB ENCOUNTERS & TRIAGE API ---
 
 @app.route('/api/mongo/encounters', methods=['GET', 'POST'])
 @app.route('/api/encounters', methods=['GET', 'POST'])
 def mongo_encounters():
+    req_json = request.get_json(silent=True) or {}
     if request.method == 'POST':
-        data = request.json or {}
+        data = req_json or request.form or {}
         patient_info = data.get("patient", {})
         answers = data.get("answers", {})
         vitals = data.get("vitals", {})
@@ -185,22 +206,21 @@ def mongo_encounters():
             doc["_id"] = f"mongo-enc-{len(fallback_db['encounters']) + 1}"
             fallback_db["encounters"].append(doc)
 
-        return jsonify({"success": True, "encounter": doc}), 201
+        return jsonify({"success": True, "encounter": serialize_mongo(doc)}), 201
 
     if IS_MONGO_ONLINE:
         encounters = list(db.encounters.find().sort("triage.risk_percentage", -1))
-        for e in encounters: e["_id"] = str(e["_id"])
     else:
         encounters = fallback_db["encounters"]
 
-    return jsonify(encounters), 200
+    return jsonify(serialize_mongo(encounters)), 200
 
 @app.route('/api/mongo/encounters/<enc_id>/approve', methods=['PUT', 'POST'])
 @app.route('/api/encounters/<enc_id>/approve', methods=['PUT', 'POST'])
 def approve_encounter(enc_id):
     """Doctor sign-off route: updates status to COMPLETED_SIGNED_OFF and attaches notes."""
-    data = request.json or {}
-    notes = data.get("doctor_notes", "")
+    req_json = request.get_json(silent=True) or {}
+    notes = req_json.get("doctor_notes", "") if req_json else request.form.get("doctor_notes", "")
     
     if IS_MONGO_ONLINE:
         db.encounters.update_one(
@@ -211,6 +231,13 @@ def approve_encounter(enc_id):
                 "signed_at": datetime.now(timezone.utc).isoformat()
             }}
         )
+    else:
+        for enc in fallback_db["encounters"]:
+            if enc.get("encounter_id") == enc_id or enc.get("_id") == enc_id:
+                enc["status"] = "COMPLETED_SIGNED_OFF"
+                enc["doctor_notes"] = notes
+                enc["signed_at"] = datetime.now(timezone.utc).isoformat()
+
     return jsonify({
         "success": True,
         "message": f"Encounter {enc_id} successfully signed off and saved to MongoDB.",
@@ -224,6 +251,7 @@ def ocr_scan():
     """Python Real PDF, Written Notes & Image OCR API Endpoint."""
     try:
         extracted_text = ""
+        req_json = request.get_json(silent=True) or {}
 
         # 1. Process PDF or Image File Upload
         if 'file' in request.files:
@@ -253,8 +281,8 @@ def ocr_scan():
                 except Exception:
                     extracted_text = f"Scanned Image File ({img.width}x{img.height}px)"
 
-        elif (request.json and 'image_base64' in request.json) or (request.form and 'image_base64' in request.form):
-            b64_val = (request.json or {}).get('image_base64') or request.form.get('image_base64')
+        elif ('image_base64' in req_json) or (request.form and 'image_base64' in request.form):
+            b64_val = req_json.get('image_base64') or request.form.get('image_base64')
             b64_str = b64_val.split(',')[-1]
             img_data = base64.b64decode(b64_str)
             img = Image.open(io.BytesIO(img_data))
@@ -270,9 +298,8 @@ def ocr_scan():
             except Exception:
                 extracted_text = f"Captured Camera Snapshot ({img.width}x{img.height}px)"
 
-        elif (request.json and ('raw_text' in request.json or 'text' in request.json)) or (request.form and ('raw_text' in request.form or 'text' in request.form)):
-            req_data = request.json or request.form
-            extracted_text = req_data.get('raw_text') or req_data.get('text', '')
+        elif ('raw_text' in req_json or 'text' in req_json) or (request.form and ('raw_text' in request.form or 'text' in request.form)):
+            extracted_text = req_json.get('raw_text') or req_json.get('text') or request.form.get('raw_text') or request.form.get('text', '')
 
         # Parse extracted text using Medical NLP Engine
         parsed_result = parse_medical_text(extracted_text)
@@ -291,4 +318,4 @@ def ocr_scan():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"MediKiosk MongoDB API Server running on http://0.0.0.0:{port}")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)

@@ -14,7 +14,7 @@ def create_patient_document(abha_id, full_name, age, gender, phone, language="en
         "gender": gender,
         "phone": phone,
         "preferred_language": language,
-        "created_at": datetime.now(timezone.utc)
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
 
 def create_encounter_document(patient_id, abha_id, care_mode, symptom_category, answers, vitals, triage, scanned_doc, fhir_payload):
@@ -38,7 +38,7 @@ def create_encounter_document(patient_id, abha_id, care_mode, symptom_category, 
         "fhir_payload": fhir_payload, # ABDM HL7 FHIR R4 Bundle JSON
         "status": "PRIORITY_ALERT" if triage.get("isRedFlag") else "QUEUED",
         "doctor_notes": "",
-        "created_at": datetime.now(timezone.utc)
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
 
 def create_vitals_telemetry_document(temperature_c, heart_rate_bpm, spo2_percent, respiratory_rate=16, source="Peripheral Sensors"):
@@ -49,5 +49,5 @@ def create_vitals_telemetry_document(temperature_c, heart_rate_bpm, spo2_percent
         "spo2_percent": int(spo2_percent),
         "respiratory_rate": int(respiratory_rate),
         "source": source,
-        "timestamp": datetime.now(timezone.utc)
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
