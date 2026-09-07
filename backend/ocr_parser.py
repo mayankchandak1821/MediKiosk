@@ -190,7 +190,10 @@ def parse_medical_text(text=""):
         # dose and the frequency, so the frequency never matched and every drug fell
         # back to "As directed" — losing SOS, the one instruction a patient must not
         # have to guess at.
-        r'(?:\s*\d*\s*(?:tab|cap|tsp|tbsp|drops?)s?\.?)?'
+        # Leading separator matters: a clean transcription keeps the prescriber's colon
+        # ("625mg : 1 tab thrice daily"), which the damaged OCR had dropped. Without it
+        # the filler fails to match and the frequency is lost all over again.
+        r'(?:\s*[:\-,]?\s*\d*\s*(?:tab|cap|tsp|tbsp|drops?)s?\.?)?'
         # ...and a parenthetical volume can sit in the same place: "2 tsp (10ml) tid".
         r'(?:\s*\([^)]{0,14}\))?'
         r'(?:\s*(?:--|-|:|,|\()?\s*(?P<freq>[0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|four times daily|OD|BD|TDS|TID|QDS|QID|HS|STAT|bedtime|morning|night|SOS|after meals|before meals)\b)?'

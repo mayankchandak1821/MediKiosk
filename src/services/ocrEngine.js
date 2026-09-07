@@ -319,7 +319,7 @@ class OCREngine {
     //   - tsp/tbsp/drops      syrups are not dosed in mg
     //   - "1 tab" filler      "625mg 1 tab thrice daily"
     //   - "(10ml)" filler     "2 tsp (10ml) tid"
-    const dynamicMedRegex = /(?:(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops|\d+[\.\)])\s*)?([A-Za-z0-9\-\/]{3,}(?:\s+[A-Za-z0-9\-\/]+){0,2})\s*:?\s+(\d+(?:\.\d+)?\s*(?:mg|g|mcg|ml|iu|units?|tsp|tbsp|teaspoons?|drops?))\b(?:\s*\d*\s*(?:tab|cap|tsp|tbsp|drops?)s?\.?)?(?:\s*\([^)]{0,14}\))?(?:\s*(?:--|-|:|,|\()?\s*([0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|four times daily|OD|BD|TDS|TID|QDS|QID|HS|STAT|bedtime|morning|night|SOS|after meals|before meals)\b)?(?:\s*(?:x|for)?\s*(\d+\s*days?))?/gi;
+    const dynamicMedRegex = /(?:(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops|\d+[\.\)])\s*)?([A-Za-z0-9\-\/]{3,}(?:\s+[A-Za-z0-9\-\/]+){0,2})\s*:?\s+(\d+(?:\.\d+)?\s*(?:mg|g|mcg|ml|iu|units?|tsp|tbsp|teaspoons?|drops?))\b(?:\s*[:\-,]?\s*\d*\s*(?:tab|cap|tsp|tbsp|drops?)s?\.?)?(?:\s*\([^)]{0,14}\))?(?:\s*(?:--|-|:|,|\()?\s*([0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|four times daily|OD|BD|TDS|TID|QDS|QID|HS|STAT|bedtime|morning|night|SOS|after meals|before meals)\b)?(?:\s*(?:x|for)?\s*(\d+\s*days?))?/gi;
     const writtenRxRegex = /(?:(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops|\d+[\.\)])\s*)?([A-Za-z0-9\-\/]{3,}(?:\s+[A-Za-z0-9\-\/]+){0,1})\s+(\d+(?:\.\d+)?)\s+([0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|OD|BD|TDS|QDS|bedtime|morning|night|after meals|before meals)(?:\s*(?:x|for)?\s*(\d+\s*days?))?/gi;
 
     let match;
