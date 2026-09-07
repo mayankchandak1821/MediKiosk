@@ -378,7 +378,10 @@ class OCREngine {
     extracted.diagnoses = extracted.pastMedicalHistory.length > 0 ? extracted.pastMedicalHistory : ['Written Prescription Review'];
 
     // 5. PATHOLOGY LAB PARAMETERS
-    const labPattern = /([A-Za-z\s\(\)]{3,25})\s+(\d+(?:\.\d+)?)\s*(mg\/dL|%|g\/dL|uIU\/mL|mmol\/L)?\s*(?:\[?(HIGH|LOW|ELEVATED|CRITICAL|NORMAL)\]?)?/i;
+    // Mirrors backend/ocr_parser.py — the camera path parses here, the PDF path there,
+    // so both fixes have to live in both files or the bug survives on one route.
+    // Name class allows digits: without them "HbA1c" matched only its tail, named "C".
+    const labPattern = /([A-Za-z][A-Za-z0-9\s\(\)\-\/]{2,24})\s+(\d+(?:\.\d+)?)\s*(mg\/dL|%|g\/dL|uIU\/mL|mmol\/L)?\s*(?:\[?(HIGH|LOW|ELEVATED|CRITICAL|NORMAL)\]?)?/i;
     lines.forEach(line => {
       if (/sugar|hba1c|creatinine|urea|hemoglobin|cholesterol|thyroid|tsh|fbs|ppbs/i.test(line)) {
         const lm = line.match(labPattern);
@@ -386,12 +389,24 @@ class OCREngine {
           const testName = lm[1].trim();
           const valNum = lm[2];
           const unit = lm[3] || '';
-          const flag = lm[4] || 'NORMAL';
-          const isAbnormal = /high|critical|elevated|low/i.test(line);
+          const isAbnormal = /\b(high|critical|elevated|low)\b/i.test(line);
+          // The flag only lands in group 4 when it follows the unit directly. A real
+          // report puts the reference range in between ("8.2 % (4.0-5.6) HIGH"), so
+          // this defaulted to NORMAL while isAbnormal said true — and the UI renders an
+          // alert badge whose text then read "NORMAL". Read it from the whole line.
+          let flag = lm[4];
+          if (!flag) {
+            const lineFlag = line.match(/\b(CRITICAL|HIGH|ELEVATED|LOW|NORMAL)\b/i);
+            flag = lineFlag ? lineFlag[1] : 'NORMAL';
+          }
+          if (isAbnormal && flag.toUpperCase() === 'NORMAL') flag = 'ABNORMAL';
 
           if (!extracted.investigations.some(i => i.testName.toLowerCase() === testName.toLowerCase())) {
             extracted.investigations.push({
-              testName: testName.charAt(0).toUpperCase() + testName.slice(1),
+              // Preserve medical case: "HbA1c" must not become "Hba1c".
+              testName: testName === testName.toLowerCase()
+                ? testName.charAt(0).toUpperCase() + testName.slice(1)
+                : testName,
               value: `${valNum} ${unit}`.trim(),
               refRange: 'Standard Range',
               isAbnormal: isAbnormal,

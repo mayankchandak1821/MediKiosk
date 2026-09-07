@@ -81,7 +81,12 @@ def parse_medical_text(text=""):
     lines = [line.strip() for line in text.split('\n') if line.strip()]
 
     doc_type = "Medical Document"
-    if re.search(r'lab|pathology|report|test|blood|serum|hba1c|sugar|creatinine|hemoglobin', text, re.I):
+    # Was: any mention of test/blood/hba1c. A prescription that merely says "check
+    # HbA1c in 3 months" was therefore filed as a lab report. Require markers a lab
+    # report actually has, and let an Rx block win when both look plausible.
+    has_rx = re.search(r'Rx|Tab|Cap|[0-1]-[0-1]-[0-1]', text, re.I)
+    looks_like_lab = re.search(r'pathology|laborator|lab report|reference range|test\s+name', text, re.I)
+    if looks_like_lab and not has_rx:
         doc_type = "Pathology Lab Report"
     elif re.search(r'c\/o|h\/o|o\/e|adv|written|handwritten|impression|notes|symptoms', text, re.I):
         doc_type = "Handwritten / Written Clinical Note"
@@ -216,7 +221,9 @@ def parse_medical_text(text=""):
 
     # 5. LAB PARAMETER EXTRACTION
     investigations = []
-    lab_pattern = re.compile(r'([A-Za-z\s\(\)]{3,25})\s+(\d+(?:\.\d+)?)\s*(mg\/dL|%|g\/dL|uIU\/mL|mmol\/L)?\s*(?:\[?(HIGH|LOW|ELEVATED|CRITICAL|NORMAL)\]?)?', re.I)
+    # The name class must allow digits: without them "HbA1c" matched only its tail and
+    # the test came out named "C". Anchored to a letter so a bare number is not a name.
+    lab_pattern = re.compile(r'([A-Za-z][A-Za-z0-9\s\(\)\-\/]{2,24})\s+(\d+(?:\.\d+)?)\s*(mg\/dL|%|g\/dL|uIU\/mL|mmol\/L)?\s*(?:\[?(HIGH|LOW|ELEVATED|CRITICAL|NORMAL)\]?)?', re.I)
 
     for line in lines:
         if any(kw in line.lower() for kw in ['sugar', 'hba1c', 'creatinine', 'urea', 'hemoglobin', 'cholesterol', 'thyroid', 'tsh', 'fbs', 'ppbs']):
@@ -225,12 +232,25 @@ def parse_medical_text(text=""):
                 test_name = match.group(1).strip()
                 val_num = match.group(2)
                 unit = match.group(3) or ""
-                flag = match.group(4) or "NORMAL"
-                is_abnormal = bool(re.search(r'high|critical|elevated|low', line, re.I))
+                # The flag only lands in group 4 when it follows the unit directly. Real
+                # reports put the reference range in between ("8.2 %  (4.0-5.6)  HIGH"),
+                # so group 4 was empty and every abnormal value defaulted to NORMAL —
+                # while is_abnormal below read the same line and said True. The record
+                # contradicted itself, and the UI shows an alert badge reading "NORMAL".
+                # Read the flag from the whole line, and keep the two in agreement.
+                flag = match.group(4)
+                if not flag:
+                    line_flag = re.search(r'\b(CRITICAL|HIGH|ELEVATED|LOW|NORMAL)\b', line, re.I)
+                    flag = line_flag.group(1) if line_flag else "NORMAL"
+                is_abnormal = bool(re.search(r'\b(high|critical|elevated|low)\b', line, re.I))
+                if is_abnormal and flag.upper() == "NORMAL":
+                    flag = "ABNORMAL"  # never show "NORMAL" on a value we flagged
 
                 if not any(i['testName'].lower() == test_name.lower() for i in investigations):
                     investigations.append({
-                        "testName": test_name.capitalize(),
+                        # capitalize() would turn "HbA1c" into "Hba1c". Medical test names carry
+                        # meaningful case, so only fix the all-lowercase ones.
+                        "testName": test_name.capitalize() if test_name.islower() else test_name,
                         "value": f"{val_num} {unit}".strip(),
                         "refRange": "Standard Range",
                         "isAbnormal": is_abnormal,
