@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Heart, Brain, Activity, User, ShieldAlert, Sparkles, AlertCircle, ZoomIn, RefreshCw, CheckCircle2 } from 'lucide-react';
 
-export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCategory }) {
+export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCategory, language = 'hi' }) {
+  const isHindi = language === 'hi';
   const [viewAngle, setViewAngle] = useState('front'); // 'front' | 'back'
 
   const bodyZones = [
     {
       id: 'head_forehead',
       label: 'Head & Brain',
+      label_hi: 'सिर एवं मस्तिष्क',
       subtext: 'Headache, Dizziness, Migraine',
+      subtext_hi: 'सिरदर्द, चक्कर आना, माइग्रेन',
       category: 'headache',
       x: 50, y: 12,
       zoomClass: 'scale-[1.8] translate-y-[22%]',
@@ -18,7 +21,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'throat_neck',
       label: 'Throat & Neck',
+      label_hi: 'गला एवं गर्दन',
       subtext: 'Sore throat, Thyroid, Cervical',
+      subtext_hi: 'गले में खराश, थायराइड, थकावट',
       category: 'respiratory',
       x: 50, y: 22,
       zoomClass: 'scale-[1.7] translate-y-[14%]',
@@ -28,7 +33,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'chest_center',
       label: 'Center of Chest / Heart',
+      label_hi: 'सीने का मध्य भाग / हृदय',
       subtext: 'Pressure, Squeezing, Cardiac',
+      subtext_hi: 'दबाव, जकड़न, हृदय संबंधी',
       category: 'chest_pain',
       x: 50, y: 34,
       zoomClass: 'scale-[1.75] translate-y-[2%]',
@@ -39,7 +46,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'chest_left',
       label: 'Left Chest & Arm',
+      label_hi: 'बायां सीना एवं बायां हाथ',
       subtext: 'Cardiovascular Radiation',
+      subtext_hi: 'हृदय घात के फैलने वाले लक्षण',
       category: 'chest_pain',
       x: 62, y: 36,
       zoomClass: 'scale-[1.75] translate-y-[2%]',
@@ -50,7 +59,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'chest_right',
       label: 'Right Chest / Lungs',
+      label_hi: 'दायां सीना / फेफड़े',
       subtext: 'Respiration, Pleuritic Pain',
+      subtext_hi: 'सांस लेने में दर्द, फेफड़े',
       category: 'respiratory',
       x: 38, y: 36,
       zoomClass: 'scale-[1.75] translate-y-[2%]',
@@ -60,7 +71,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'abdomen_upper',
       label: 'Upper Abdomen / Stomach',
+      label_hi: 'ऊपरी पेट / अमाशय',
       subtext: 'Stomach, Liver, Acidity',
+      subtext_hi: 'एसिडिटी, नाभि जलन, यकृत',
       category: 'abdominal',
       x: 50, y: 48,
       zoomClass: 'scale-[1.7] translate-y-[-10%]',
@@ -70,7 +83,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'abdomen_lower',
       label: 'Lower Abdomen / Pelvis',
+      label_hi: 'निचला पेट / पेल्विस',
       subtext: 'Intestines, Urinary, Cramps',
+      subtext_hi: 'आंतों में ऐंठन, पेशाब में जलन',
       category: 'abdominal',
       x: 50, y: 60,
       zoomClass: 'scale-[1.7] translate-y-[-20%]',
@@ -80,7 +95,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'joints_limbs',
       label: 'Joints, Arms & Knees',
+      label_hi: 'जोड़, हाथ एवं घुटने',
       subtext: 'Arthritis, Muscle Stiffness',
+      subtext_hi: 'गठिया, मांसपेशियों में अकड़न',
       category: 'routine_checkup',
       x: 25, y: 78,
       zoomClass: 'scale-[1.5] translate-y-[-32%]',
@@ -90,7 +107,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'back_lumbar',
       label: 'Spine & Lower Back',
+      label_hi: 'रीढ़ की हड्डी एवं पीठ',
       subtext: 'Lumbar, Sciatica, Kidney',
+      subtext_hi: 'कमर दर्द, साइटिका, गुर्दा',
       category: 'routine_checkup',
       x: 50, y: 52,
       zoomClass: 'scale-[1.7] translate-y-[-12%]',
@@ -124,15 +143,15 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
           </span>
           <div>
             <h4 className="font-extrabold text-sm text-slate-100 flex items-center gap-2">
-              Pictorial Anatomical Body Map & Graphical Zoom
+              {isHindi ? 'चित्रात्मक शारीरिकी बॉडी मैप एवं जूम' : 'Pictorial Anatomical Body Map & Graphical Zoom'}
               {activeZone && (
                 <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 font-mono text-[10px] uppercase border border-teal-500/40 animate-pulse">
-                  🔍 ZOOMED: {activeZone.label.toUpperCase()}
+                  🔍 {isHindi ? 'जूम क्षेत्र:' : 'ZOOMED:'} {(isHindi ? activeZone.label_hi : activeZone.label).toUpperCase()}
                 </span>
               )}
             </h4>
             <p className="text-xs text-slate-400">
-              Tap any body region to zoom in and launch target decision cards below
+              {isHindi ? 'किसी भी अंग पर टैप करके जूम करें और नीचे दिए गए प्रश्न कार्ड देखें' : 'Tap any body region to zoom in and launch target decision cards below'}
             </p>
           </div>
         </div>
@@ -144,7 +163,7 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
               onClick={() => onSelectSite('')}
               className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Reset Zoom
+              <RefreshCw className="w-3.5 h-3.5" /> {isHindi ? 'रीसेट जूम' : 'Reset Zoom'}
             </button>
           )}
 
@@ -155,7 +174,7 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
                 viewAngle === 'front' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Front View
+              {isHindi ? 'सामने का दृश्य' : 'Front View'}
             </button>
             <button
               onClick={() => setViewAngle('back')}
@@ -163,7 +182,7 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
                 viewAngle === 'back' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Back View
+              {isHindi ? 'पीछे का दृश्य' : 'Back View'}
             </button>
           </div>
         </div>

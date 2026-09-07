@@ -11,21 +11,15 @@ export default function PatientDashboard({
   encounterQueue = [], 
   onDescribeIllness,
   onOcrDetection,
-  currentVitals 
+  currentVitals,
+  language = 'hi'
 }) {
   const [selectedEncounter, setSelectedEncounter] = useState(encounterQueue[0] || null);
 
   // Decision Tree Modal State
   const [showTreeModal, setShowTreeModal] = useState(false);
   const [treeCategory, setTreeCategory] = useState('chest_pain');
-  const [treeAnswers, setTreeAnswers] = useState({
-    chest_character: 'crushing_pressure',
-    chest_radiation: 'rad_arm_jaw_neck',
-    chest_triggers: 'trig_exertion',
-    chest_associated: ['assoc_sweating', 'assoc_dyspnea'],
-    chest_risk_history: ['hx_cad', 'hx_htn']
-  });
-
+  const [treeAnswers, setTreeAnswers] = useState({});
   // Default demo patient profile if queue is empty
   const patientProfile = selectedEncounter?.patient || {
     full_name: 'Rajesh Verma',
@@ -216,6 +210,7 @@ Status: ${enc.status === 'COMPLETED_SIGNED_OFF' ? 'OFFICIALLY SIGNED OFF BY DOCT
             treeAnswers={treeAnswers}
             onTreeAnswersChange={(updated) => setTreeAnswers(updated)}
             onCompleteTree={(evalData) => handleCompleteTreeAssessment(evalData)}
+            language={language || 'hi'}
           />
         </div>
       )}

@@ -693,6 +693,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             vitals={currentVitals}
             treeAnswers={treeAnswers}
             onTreeAnswersChange={(updatedTreeAnswers) => setTreeAnswers(updatedTreeAnswers)}
+            language={language || 'hi'}
           />
 
           {/* Vitals Telemetry Gauges with Live Triage Risk Score */}
