@@ -96,7 +96,13 @@ export default function Header({
           <Globe className="w-3.5 h-3.5 text-teal-400" />
           <select
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={(e) => {
+              const newLang = e.target.value;
+              setLanguage(newLang);
+              import('i18next').then(i18nModule => {
+                i18nModule.default.changeLanguage(newLang);
+              });
+            }}
             className="bg-transparent text-slate-200 font-medium focus:outline-none cursor-pointer"
           >
             {languages.map((l) => (

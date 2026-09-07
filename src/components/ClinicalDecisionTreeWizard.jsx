@@ -3,7 +3,8 @@ import {
   Heart, ShieldAlert, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, 
   Sparkles, Activity, Wind, Flame, User, RefreshCw, Zap, Stethoscope
 } from 'lucide-react';
-import { DECISION_TREES, decisionTreeEngine } from '../services/decisionTreeEngine';
+import { useTranslation } from 'react-i18next';
+import { DECISION_TREES, decisionTreeEngine, getOptionLabel, getStepTitle, getStepSubtitle } from '../services/decisionTreeEngine';
 
 export default function ClinicalDecisionTreeWizard({ 
   category = 'chest_pain', 
@@ -13,7 +14,9 @@ export default function ClinicalDecisionTreeWizard({
   onCompleteTree,
   language = 'hi'
 }) {
-  const isHindi = language === 'hi';
+  const { t, i18n } = useTranslation();
+  const activeLang = i18n.language || language || 'en';
+  const isHindi = activeLang === 'hi';
   const treeConfig = DECISION_TREES[category] || DECISION_TREES.chest_pain;
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
 
@@ -139,10 +142,10 @@ export default function ClinicalDecisionTreeWizard({
               {isHindi ? `निर्णय वृक्ष चरण ${currentStepIdx + 1} / ${totalSteps}` : `DECISION TREE STEP ${currentStepIdx + 1} / ${totalSteps}`}
             </span>
             <h4 className="font-extrabold text-slate-100 text-base">
-              {isHindi ? (currentStep.title_hi || currentStep.title) : currentStep.title}
+              {getStepTitle(currentStep, activeLang)}
             </h4>
             <p className="text-xs text-slate-400 mt-0.5">
-              {isHindi ? (currentStep.subtitle_hi || currentStep.subtitle) : currentStep.subtitle}
+              {getStepSubtitle(currentStep, activeLang)}
             </p>
           </div>
 
@@ -157,7 +160,7 @@ export default function ClinicalDecisionTreeWizard({
                 <button
                   key={opt.id}
                   onClick={() => handleSelectOption(opt.id, currentStep.isMultiSelect)}
-                  className={`w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 ${
+                  className={`w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
                     isSelected
                       ? opt.isRedFlag
                         ? 'bg-rose-500/20 border-rose-400 text-rose-200 font-bold shadow-lg shadow-rose-500/10'
@@ -181,7 +184,7 @@ export default function ClinicalDecisionTreeWizard({
                       {(!opt.icon || opt.icon === 'CheckCircle2') && <CheckCircle2 className="w-4 h-4" />}
                     </span>
                     <span className="text-xs font-semibold">
-                      {isHindi ? (opt.label_hi || opt.label) : opt.label}
+                      {getOptionLabel(opt, activeLang)}
                     </span>
                   </div>
 
@@ -200,27 +203,27 @@ export default function ClinicalDecisionTreeWizard({
             <button
               onClick={handlePrevStep}
               disabled={currentStepIdx === 0}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all border ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all border cursor-pointer ${
                 currentStepIdx === 0
                   ? 'bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed'
                   : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
               }`}
             >
-              <ChevronLeft className="w-4 h-4" /> {isHindi ? 'पिछला चरण' : 'Previous Step'}
+              <ChevronLeft className="w-4 h-4" /> {t('decisionTree.prevStep')}
             </button>
 
             <button
               onClick={handleNextStep}
               disabled={!isStepAnswered()}
-              className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl font-bold text-xs transition-all ${
+              className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                 isStepAnswered()
                   ? 'bg-gradient-to-r from-teal-400 to-cyan-400 text-slate-950 shadow-lg hover:brightness-110'
                   : 'bg-slate-800 text-slate-500 cursor-not-allowed'
               }`}
             >
               {currentStepIdx === totalSteps - 1 
-                ? (isHindi ? 'निर्णय वृक्ष पूर्ण करें' : 'Complete Decision Tree') 
-                : (isHindi ? 'अगला चरण' : 'Next Step')}
+                ? t('decisionTree.finishTree') 
+                : t('decisionTree.nextStep')}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>

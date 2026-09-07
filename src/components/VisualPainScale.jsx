@@ -1,14 +1,17 @@
 import React from 'react';
 import { Smile, Frown, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-export default function VisualPainScale({ value, onChange }) {
+export default function VisualPainScale({ value, onChange, language = 'hi' }) {
+  const { t } = useTranslation();
+
   const painLevels = [
-    { level: 0, emoji: '😃', label: 'No Pain', desc: 'Feeling completely comfortable', color: 'border-emerald-500 bg-emerald-500/10 text-emerald-400' },
-    { level: 2, emoji: '😊', label: 'Mild Pain', desc: 'Noticeable, but easily ignored', color: 'border-emerald-400 bg-emerald-400/10 text-emerald-300' },
-    { level: 4, emoji: '😐', label: 'Moderate Pain', desc: 'Interferes with task concentration', color: 'border-amber-400 bg-amber-400/10 text-amber-300' },
-    { level: 6, emoji: '😣', label: 'Severe Pain', desc: 'Difficult to ignore, affects breathing', color: 'border-orange-500 bg-orange-500/10 text-orange-300' },
-    { level: 8, emoji: '😫', label: 'Very Severe', desc: 'Disabling pain, intense distress', color: 'border-rose-500 bg-rose-500/10 text-rose-300' },
-    { level: 10, emoji: '🤬', label: 'Worst Possible', desc: 'Unbearable, requires emergency care', color: 'border-red-600 bg-red-600/20 text-rose-400 animate-pulse' }
+    { level: 0, emoji: '😃', labelKey: 'painScale.ratings.0', color: 'border-emerald-500 bg-emerald-500/10 text-emerald-400' },
+    { level: 2, emoji: '😊', labelKey: 'painScale.ratings.2', color: 'border-emerald-400 bg-emerald-400/10 text-emerald-300' },
+    { level: 4, emoji: '😐', labelKey: 'painScale.ratings.4', color: 'border-amber-400 bg-amber-400/10 text-amber-300' },
+    { level: 6, emoji: '😣', labelKey: 'painScale.ratings.6', color: 'border-orange-500 bg-orange-500/10 text-orange-300' },
+    { level: 8, emoji: '😫', labelKey: 'painScale.ratings.8', color: 'border-rose-500 bg-rose-500/10 text-rose-300' },
+    { level: 10, emoji: '🤬', labelKey: 'painScale.ratings.10', color: 'border-red-600 bg-red-600/20 text-rose-400 animate-pulse' }
   ];
 
   return (
@@ -16,12 +19,14 @@ export default function VisualPainScale({ value, onChange }) {
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">
         <div>
           <h4 className="font-bold text-sm text-slate-100 flex items-center gap-2">
-            Pictorial Pain & Discomfort Scale (Wong-Baker Visual Standard)
+            {t('painScale.title')}
           </h4>
-          <p className="text-xs text-slate-400">Select the face or rating slider that best describes your current pain level.</p>
+          <p className="text-xs text-slate-400">
+            {t('painScale.subtitle')}
+          </p>
         </div>
         <span className="font-mono text-sm font-extrabold text-teal-400 px-3 py-1 bg-teal-500/10 border border-teal-500/30 rounded-xl">
-          Rating: {value} / 10
+          {t('painScale.selected')}: {value} / 10
         </span>
       </div>
 
@@ -33,7 +38,7 @@ export default function VisualPainScale({ value, onChange }) {
             <button
               key={p.level}
               onClick={() => onChange(p.level)}
-              className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-between h-32 ${
+              className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-between h-32 cursor-pointer ${
                 isSelected
                   ? `border-2 shadow-xl ${p.color} scale-105 z-10`
                   : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700 text-slate-400'
@@ -41,10 +46,13 @@ export default function VisualPainScale({ value, onChange }) {
             >
               <span className="text-3xl my-1 select-none">{p.emoji}</span>
               <div>
-                <span className="font-bold text-xs block text-slate-200">{p.label}</span>
-                <span className="text-[10px] text-slate-400 block line-clamp-1">{p.desc}</span>
+                <span className="font-bold text-xs block text-slate-200">
+                  {t(p.labelKey)}
+                </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-slate-500 mt-1">Level {p.level}</span>
+              <span className="text-[10px] font-mono font-bold text-slate-500 mt-1">
+                Level {p.level}
+              </span>
             </button>
           );
         })}

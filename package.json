@@ -10,9 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "i18next": "^26.4.2",
+    "i18next-http-backend": "^4.0.2",
     "lucide-react": "^1.38.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-i18next": "^17.0.13",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {

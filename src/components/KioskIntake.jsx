@@ -15,6 +15,7 @@ import ClinicalDecisionTreeWizard from './ClinicalDecisionTreeWizard';
 import { decisionTreeEngine } from '../services/decisionTreeEngine';
 
 export default function KioskIntake({ currentVitals, onEncounterSubmit, language, isDoctorAvailable = true, opdSessionNumber = 1, initialStep = 2 }) {
+  const isHindi = language === 'hi';
   // Step State: 1 = Patient Auth / Sign Up, 2 = Multimodal Voice & Touch Intake, 3 = Medical Document OCR, 4 = Review & Submit
   const [step, setStep] = useState(initialStep);
 
@@ -259,12 +260,14 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </span>
             <div>
               <h2 className="font-bold text-slate-100 text-sm">
-                {step === 1 && 'Step 1: Patient Sign Up & ABHA Authentication'}
-                {step === 2 && 'Step 2: Pictorial Intake & Clinical Questionnaire'}
-                {step === 3 && 'Step 3: Medical Document OCR Scanner'}
-                {step === 4 && 'Step 4: Final OPD Review & Doctor Routing'}
+                {step === 1 && (isHindi ? 'चरण 1: मरीज़ पंजीकरण एवं आभा सत्यापन' : 'Step 1: Patient Sign Up & ABHA Authentication')}
+                {step === 2 && (isHindi ? 'चरण 2: चित्रात्मक लक्षण चयन एवं नैदानिक प्रश्नोत्तरी' : 'Step 2: Pictorial Intake & Clinical Questionnaire')}
+                {step === 3 && (isHindi ? 'चरण 3: पर्चा एवं लैब रिपोर्ट स्कैनर' : 'Step 3: Medical Document OCR Scanner')}
+                {step === 4 && (isHindi ? 'चरण 4: ओपीडी समीक्षा एवं डॉक्टर प्रेषण' : 'Step 4: Final OPD Review & Doctor Routing')}
               </h2>
-              <p className="text-xs text-slate-400">Self-service digital intake kiosk for Primary Health Centers & Hospital OPDs</p>
+              <p className="text-xs text-slate-400">
+                {isHindi ? 'प्राथमिक स्वास्थ्य केंद्र एवं अस्पताल ओपीडी हेतु डिजिटल कियोस्क' : 'Self-service digital intake kiosk for Primary Health Centers & Hospital OPDs'}
+              </p>
             </div>
           </div>
 

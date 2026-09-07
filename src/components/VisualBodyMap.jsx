@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Heart, Brain, Activity, User, ShieldAlert, Sparkles, AlertCircle, ZoomIn, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCategory, language = 'hi' }) {
-  const isHindi = language === 'hi';
+  const { t } = useTranslation();
   const [viewAngle, setViewAngle] = useState('front'); // 'front' | 'back'
 
   const bodyZones = [
@@ -143,15 +144,15 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
           </span>
           <div>
             <h4 className="font-extrabold text-sm text-slate-100 flex items-center gap-2">
-              {isHindi ? 'चित्रात्मक शारीरिकी बॉडी मैप एवं जूम' : 'Pictorial Anatomical Body Map & Graphical Zoom'}
+              {t('bodyMap.title')}
               {activeZone && (
                 <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 font-mono text-[10px] uppercase border border-teal-500/40 animate-pulse">
-                  🔍 {isHindi ? 'जूम क्षेत्र:' : 'ZOOMED:'} {(isHindi ? activeZone.label_hi : activeZone.label).toUpperCase()}
+                  🔍 ZOOMED: {t(`bodyMap.zones.${activeZone.id}.label`, activeZone.label).toUpperCase()}
                 </span>
               )}
             </h4>
             <p className="text-xs text-slate-400">
-              {isHindi ? 'किसी भी अंग पर टैप करके जूम करें और नीचे दिए गए प्रश्न कार्ड देखें' : 'Tap any body region to zoom in and launch target decision cards below'}
+              {t('bodyMap.subtitle')}
             </p>
           </div>
         </div>
@@ -161,28 +162,28 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
           {selectedSite && (
             <button
               onClick={() => onSelectSite('')}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1 cursor-pointer"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> {isHindi ? 'रीसेट जूम' : 'Reset Zoom'}
+              <RefreshCw className="w-3.5 h-3.5" /> {t('bodyMap.views.reset')}
             </button>
           )}
 
           <div className="flex items-center p-1 bg-slate-900 rounded-xl border border-slate-800 text-xs">
             <button
               onClick={() => setViewAngle('front')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 viewAngle === 'front' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {isHindi ? 'सामने का दृश्य' : 'Front View'}
+              {t('bodyMap.views.front')}
             </button>
             <button
               onClick={() => setViewAngle('back')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 viewAngle === 'back' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {isHindi ? 'पीछे का दृश्य' : 'Back View'}
+              {t('bodyMap.views.back')}
             </button>
           </div>
         </div>
@@ -283,8 +284,8 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
                       {zone.icon === 'User' && <User className="w-5 h-5 stroke-[2.5]" />}
                     </div>
                     <div>
-                      <h5 className="font-extrabold text-xs text-slate-100">{zone.label}</h5>
-                      <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{zone.subtext}</p>
+                      <h5 className="font-extrabold text-xs text-slate-100">{t(`bodyMap.zones.${zone.id}.label`, zone.label)}</h5>
+                      <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{t(`bodyMap.zones.${zone.id}.subtext`, zone.subtext)}</p>
                     </div>
                   </div>
 

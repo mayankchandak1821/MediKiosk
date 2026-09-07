@@ -111,7 +111,7 @@ export default function App() {
       {/* Main Content Router View */}
       <main className="flex-1 pb-12 pt-4">
         {activeRole === 'login' ? (
-          <LoginPage onLogin={handleLogin} />
+          <LoginPage onLogin={handleLogin} language={language} />
         ) : activeRole === 'patient' ? (
           patientSubView === 'dashboard' ? (
             <PatientDashboard

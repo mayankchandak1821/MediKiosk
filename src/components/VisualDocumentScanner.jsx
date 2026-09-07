@@ -3,9 +3,11 @@ import {
   Camera, FileText, Upload, Sparkles, RefreshCw, CheckCircle2, 
   ShieldCheck, Tag, Video, VideoOff, Aperture, RotateCcw, AlertCircle, Edit3, Play
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { SAMPLE_OCR_TEMPLATES, ocrEngine } from '../services/ocrEngine';
 
-export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
+export default function VisualDocumentScanner({ scannedDoc, onDocScan, language = 'hi' }) {
+  const { t } = useTranslation();
   // Input Modes: 'webcam' | 'upload' | 'preset' | 'text'
   const [scanMode, setScanMode] = useState('webcam');
   const [isScanning, setIsScanning] = useState(false);

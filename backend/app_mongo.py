@@ -329,6 +329,21 @@ def ocr_scan():
         print("OCR Scan Endpoint Error:", err)
         return jsonify({"success": False, "error": str(err)}), 500
 
+@app.route('/api/translations/<lng>', methods=['GET'])
+@app.route('/api/translations/<lng>/<ns>', methods=['GET'])
+def get_translations(lng, ns='translation'):
+    """Serve i18next dynamic backend translations in JSON format"""
+    locale_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'locales')
+    file_path = os.path.join(locale_dir, f"{lng}.json")
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return jsonify(data), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    return jsonify({"error": f"Language '{lng}' not found"}), 404
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"MediKiosk MongoDB API Server running on http://0.0.0.0:{port}")
