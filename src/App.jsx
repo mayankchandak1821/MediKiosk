@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
+import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import PatientDashboard from './components/PatientDashboard';
 import KioskIntake from './components/KioskIntake';
@@ -9,9 +10,9 @@ import HardwareSimulator from './components/HardwareSimulator';
 import { hardwareAdapter } from './services/hardwareAdapter';
 
 export default function App() {
-  const [activeRole, setActiveRole] = useState('login'); // First page default is 'login'!
+  const [activeRole, setActiveRole] = useState('landing'); // Default view: New landing page!
   const [patientSubView, setPatientSubView] = useState('dashboard'); // 'dashboard' | 'kiosk'
-  const [kioskInitialStep, setKioskInitialStep] = useState(2); // 2 = Describe Illness, 3 = OCR Detection
+  const [kioskInitialStep, setKioskInitialStep] = useState(1); // 1 = Patient Identity & ABHA, 2 = Describe Illness, 3 = OCR Detection
   const [currentUser, setCurrentUser] = useState({ name: 'Rajesh Verma', role: 'Patient' });
   const [language, setLanguage] = useState('en');
   const [isHardwareModalOpen, setIsHardwareModalOpen] = useState(false);
@@ -93,26 +94,42 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500 selection:text-slate-950 flex flex-col">
-      {/* Header Navigation */}
-      <Header
-        activeRole={activeRole}
-        setActiveRole={setActiveRole}
-        currentUser={currentUser}
-        language={language}
-        setLanguage={setLanguage}
-        connectionState={connectionState}
-        activeSource={activeSource}
-        currentVitals={currentVitals}
-        openHardwareModal={() => setIsHardwareModalOpen(true)}
-        onOpenLogin={() => setActiveRole('login')}
-      />
+    <>
+      {activeRole === 'landing' ? (
+        <LandingPage
+          onLaunchKiosk={() => {
+            setActiveRole('patient');
+            setPatientSubView('kiosk');
+            setKioskInitialStep(1);
+          }}
+          onLaunchDoctor={() => {
+            setActiveRole('doctor');
+          }}
+          onLaunchLogin={() => {
+            setActiveRole('login');
+          }}
+        />
+      ) : (
+        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500 selection:text-slate-950 flex flex-col">
+          {/* Header Navigation */}
+          <Header
+            activeRole={activeRole}
+            setActiveRole={setActiveRole}
+            currentUser={currentUser}
+            language={language}
+            setLanguage={setLanguage}
+            connectionState={connectionState}
+            activeSource={activeSource}
+            currentVitals={currentVitals}
+            openHardwareModal={() => setIsHardwareModalOpen(true)}
+            onOpenLogin={() => setActiveRole('login')}
+          />
 
-      {/* Main Content Router View */}
-      <main className="flex-1 pb-12 pt-4">
-        {activeRole === 'login' ? (
-          <LoginPage onLogin={handleLogin} language={language} />
-        ) : activeRole === 'patient' ? (
+          {/* Main Content Router View */}
+          <main className="flex-1 pb-12 pt-4">
+            {activeRole === 'login' ? (
+              <LoginPage onLogin={handleLogin} language={language} />
+            ) : activeRole === 'patient' ? (
           patientSubView === 'dashboard' ? (
             <PatientDashboard
               encounterQueue={encounterQueue}
@@ -179,5 +196,7 @@ export default function App() {
         currentVitals={currentVitals}
       />
     </div>
+    )}
+  </>
   );
 }

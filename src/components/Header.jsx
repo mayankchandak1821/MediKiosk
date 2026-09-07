@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Stethoscope, Globe, ShieldCheck, Sliders, User, LogOut, Key } from 'lucide-react';
+import { Activity, Stethoscope, Globe, ShieldCheck, Sliders, User, LogOut, Key, Home } from 'lucide-react';
 
 export default function Header({ 
   activeRole, 
@@ -50,14 +50,18 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 text-slate-100 px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-      {/* Brand Identity */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-teal-500/20 text-slate-950 font-bold">
+      {/* Brand Identity (Clickable to return to Landing Page) */}
+      <div 
+        onClick={() => setActiveRole('landing')}
+        className="flex items-center gap-3 cursor-pointer group"
+        title="Return to MediKiosk Landing Page"
+      >
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#59C749] to-teal-400 flex items-center justify-center shadow-lg shadow-[#59C749]/20 text-slate-950 font-bold group-hover:scale-105 transition-transform">
           <Activity className="w-6 h-6 stroke-[2.5]" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+            <h1 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent group-hover:text-teal-300 transition-colors">
               MediKiosk
             </h1>
             {getRoleBadge()}
@@ -112,6 +116,16 @@ export default function Header({
             ))}
           </select>
         </div>
+
+        {/* Return to Landing Page Button */}
+        <button
+          onClick={() => setActiveRole('landing')}
+          className="px-3 py-1.5 bg-[#59C749]/10 hover:bg-[#59C749]/20 text-[#59C749] text-xs font-bold rounded-xl border border-[#59C749]/30 flex items-center gap-1.5 transition-colors shadow"
+          title="Return to Landing Page"
+        >
+          <Home className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">Landing Page</span>
+        </button>
 
         {/* Switch Role / Login Portal Button */}
         {activeRole !== 'login' && (
