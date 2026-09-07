@@ -38,6 +38,32 @@ KNOWN_DRUG_MAP = {
     "ecosprin": {"generic": "Aspirin 75mg", "class": "Antiplatelet / Blood Thinner"}
 }
 
+def correct_drug_name(name=""):
+    """Repair an OCR misread of a drug name against the known-brand map.
+
+    A camera photo of handwriting gave "Augmestin" for Augmentin. Left alone that is a
+    drug nobody dispenses, and the class lookup misses too. difflib against the map is
+    enough for single-character damage and cannot invent a name that is not already in
+    the map.
+
+    Returns (corrected_name, was_corrected). The caller keeps the flag so the doctor is
+    told the software changed a drug name rather than being shown a silent edit —
+    correcting a medicine behind a clinician's back is not a safe default.
+    """
+    import difflib
+
+    key = (name or "").strip().lower()
+    if not key or key in KNOWN_DRUG_MAP:
+        return name, False
+    # 0.82 keeps "Augmestin"->"Augmentin" (0.94) and rejects distinct drugs such as
+    # "Amlodipine" vs "Amlokind". Tighten before loosening: a wrong correction on a
+    # medicine is worse than no correction.
+    hit = difflib.get_close_matches(key, KNOWN_DRUG_MAP.keys(), n=1, cutoff=0.82)
+    if not hit or len(key) < 5:
+        return name, False
+    return hit[0].capitalize(), True
+
+
 def normalize_ocr_text(text=""):
     """Corrects common OCR handwriting misread artifacts."""
     if not text or not isinstance(text, str):
@@ -51,6 +77,11 @@ def normalize_ocr_text(text=""):
         (r'(\d+)O\s*mg\b', r'\g<1>0mg'),
         (r'(\d+)O\s*g\b', r'\g<1>0g'),
         (r'\brnmg\b', 'mg'),
+        # Confusions observed on an actual phone photo of a handwritten Rx:
+        (r'\bhid\b', 'tid'),               # 't' read as 'h'
+        (r'\bfab\b', 'tab'),               # 't' read as 'f'
+        (r'\(\s*td\s*\)', '(tid)'),        # "(td)" written for thrice daily
+        (r'(\d+)\s*mi\b', r'\g<1>ml'),     # 'ml' read as 'mi'
         (r'\bT\.D\.S\b', 'TDS'),
         (r'\bB\.D\b', 'BD'),
         (r'\bO\.D\b', 'OD'),
@@ -122,11 +153,26 @@ def parse_medical_text(text=""):
         (r'(?:notes|impression|clinical notes)[:\s]+(.*)', "Clinical Notes")
     ]
 
-    for line in lines:
+    # Advice wraps. "Advice: Steam inhalation twice daily. / Drink warm fluids. Rest."
+    # is two lines on paper and two lines out of OCR, and reading only the first threw
+    # away half of what the doctor told the patient. Absorb continuation lines until
+    # something that starts a new section: another marker, or a numbered drug line.
+    _CONTINUES = re.compile(
+        r'^(?:\d+[\.\)]|Rx\b|Tab\b|Cap\b|Syr\b|Inj\b|c/o|h/o|o/e|adv|advice|notes|'
+        r'impression|diagnosis|dx|medications?)\b', re.I)
+
+    for idx, line in enumerate(lines):
         for pattern, category in note_patterns:
             match = re.search(pattern, line, re.I)
             if match and match.group(1).strip():
-                clinical_notes.append(f"{category}: {match.group(1).strip()}")
+                parts = [match.group(1).strip()]
+                for nxt in lines[idx + 1:]:
+                    if _CONTINUES.match(nxt) or not nxt.strip():
+                        break
+                    parts.append(nxt.strip())
+                    if len(" ".join(parts)) > 300:  # a note, not the whole page
+                        break
+                clinical_notes.append(f"{category}: {' '.join(parts)}")
 
     # 3. DYNAMIC MEDICATION EXTRACTION
     medications = []
@@ -134,9 +180,20 @@ def parse_medical_text(text=""):
 
     dosage_pattern = re.compile(
         r'(?:(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops|\d+[\.\)])\s*)?'
-        r'([A-Za-z0-9\-\/]{3,}(?:\s+[A-Za-z0-9\-\/]+){0,2})\s+'
-        r'(\d+(?:\.\d+)?\s*(?:mg|g|mcg|ml|iu|units?))\b'
-        r'(?:\s*(?:--|-|:|,)?\s*([0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|OD|BD|TDS|QDS|bedtime|morning|night|SOS|after meals|before meals)?)?'
+        # Trailing ":" so "Syr Benadryl DR: 2 tsp" keeps its name.
+        r'([A-Za-z0-9\-\/]{3,}(?:\s+[A-Za-z0-9\-\/]+){0,2})\s*:?\s+'
+        # Syrups are dosed in tsp/tbsp/drops, never mg. Without these units
+        # "Syr Benadryl DR: 2 tsp" carried no recognisable dose and the drug was
+        # dropped from the list entirely — a missed medication, not a cosmetic miss.
+        r'(\d+(?:\.\d+)?\s*(?:mg|g|mcg|ml|iu|units?|tsp|tbsp|teaspoons?|drops?))\b'
+        # A prescriber writes "625mg 1 tab thrice daily". That "1 tab" sat between the
+        # dose and the frequency, so the frequency never matched and every drug fell
+        # back to "As directed" — losing SOS, the one instruction a patient must not
+        # have to guess at.
+        r'(?:\s*\d*\s*(?:tab|cap|tsp|tbsp|drops?)s?\.?)?'
+        # ...and a parenthetical volume can sit in the same place: "2 tsp (10ml) tid".
+        r'(?:\s*\([^)]{0,14}\))?'
+        r'(?:\s*(?:--|-|:|,|\()?\s*(?P<freq>[0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|four times daily|OD|BD|TDS|TID|QDS|QID|HS|STAT|bedtime|morning|night|SOS|after meals|before meals)\b)?'
         r'(?:\s*(?:x|for)?\s*(\d+\s*days?))?',
         re.I
     )
@@ -161,19 +218,31 @@ def parse_medical_text(text=""):
             clean_name = re.sub(r'^\d+[\.\)]\s*', '', raw_name)
             clean_name = re.sub(r'^(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops)\s+', '', clean_name, flags=re.I).strip()
 
-            ignore_list = ['test', 'name', 'result', 'unit', 'date', 'patient', 'ref', 'high', 'low', 'normal', 'report', 'fasting', 'blood', 'sugar', 'creatinine', 'urea', 'age', 'gender', 'phone', 'page', 'temp', 'pulse', 'bp', 'spo2']
+            ignore_list = ['test', 'name', 'result', 'unit', 'date', 'patient', 'ref', 'high', 'low', 'normal', 'report', 'fasting', 'blood', 'sugar', 'creatinine', 'urea', 'age', 'gender', 'phone', 'page', 'temp', 'pulse', 'bp', 'spo2',
+                                # Lab analytes carry a unit ('Hemoglobin 13.5 g/dL')
+                                # so they match the dose pattern and were being
+                                # listed as prescribed medicines.
+                                'hemoglobin', 'hba1c', 'cholesterol', 'triglycerides',
+                                'platelet', 'platelets', 'wbc', 'rbc', 'tsh', 't3', 't4',
+                                'bilirubin', 'albumin', 'sodium', 'potassium', 'glucose',
+                                'ppbs', 'fbs', 'esr', 'crp', 'uric']
             if clean_name.lower() not in ignore_list and len(clean_name) >= 3:
-                drug_key = clean_name.lower()
+                fixed_name, was_corrected = correct_drug_name(clean_name)
+                drug_key = fixed_name.lower()
                 if drug_key not in seen_drugs:
                     seen_drugs.add(drug_key)
                     drug_info = KNOWN_DRUG_MAP.get(drug_key, {"class": "Prescription Med"})
                     medications.append({
-                        "name": clean_name.capitalize(),
+                        "name": fixed_name.capitalize() if fixed_name.islower() else fixed_name,
                         "dosage": dosage,
                         "frequency": frequency,
                         "duration": duration,
                         "status": "ACTIVE",
-                        "class": drug_info["class"]
+                        "class": drug_info["class"],
+                        # Surfaced so the doctor can see we changed a drug name, and
+                        # what it said on the paper. Never a silent correction.
+                        "ocrCorrected": was_corrected,
+                        "ocrOriginal": clean_name if was_corrected else None
                     })
 
         # Pattern B
@@ -186,7 +255,14 @@ def parse_medical_text(text=""):
             clean_name = re.sub(r'^\d+[\.\)]\s*', '', raw_name)
             clean_name = re.sub(r'^(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops)\s+', '', clean_name, flags=re.I).strip()
 
-            ignore_list = ['test', 'name', 'result', 'unit', 'date', 'patient', 'ref', 'high', 'low', 'normal', 'report', 'fasting', 'blood', 'sugar', 'creatinine', 'urea', 'age', 'gender', 'phone', 'page', 'temp', 'pulse', 'bp', 'spo2']
+            ignore_list = ['test', 'name', 'result', 'unit', 'date', 'patient', 'ref', 'high', 'low', 'normal', 'report', 'fasting', 'blood', 'sugar', 'creatinine', 'urea', 'age', 'gender', 'phone', 'page', 'temp', 'pulse', 'bp', 'spo2',
+                                # Lab analytes carry a unit ('Hemoglobin 13.5 g/dL')
+                                # so they match the dose pattern and were being
+                                # listed as prescribed medicines.
+                                'hemoglobin', 'hba1c', 'cholesterol', 'triglycerides',
+                                'platelet', 'platelets', 'wbc', 'rbc', 'tsh', 't3', 't4',
+                                'bilirubin', 'albumin', 'sodium', 'potassium', 'glucose',
+                                'ppbs', 'fbs', 'esr', 'crp', 'uric']
             if clean_name.lower() not in ignore_list and len(clean_name) >= 3:
                 drug_key = clean_name.lower()
                 if drug_key not in seen_drugs:

@@ -310,7 +310,16 @@ class OCREngine {
 
     // 3. DYNAMIC MEDICATION PATTERN MATCHING
     const seen = new Set();
-    const dynamicMedRegex = /(?:(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops|\d+[\.\)])\s*)?([A-Za-z0-9\-\/]{3,}(?:\s+[A-Za-z0-9\-\/]+){0,2})\s+(\d+(?:\.\d+)?\s*(?:mg|g|mcg|ml|iu|units?))\b(?:\s*(?:--|-|:|,)?\s*([0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|OD|BD|TDS|QDS|bedtime|morning|night|SOS|after meals|before meals)?)?(?:\s*(?:x|for)?\s*(\d+\s*days?))?/gi;
+    // Mirrors backend/ocr_parser.py. The CAMERA path parses here (Tesseract.js in the
+    // browser), the PDF path parses there — so a fix in one file only ever fixes half
+    // the product. Measured on a real phone photo of a handwritten Rx, this pattern
+    // missed "Syr Benadryl DR: 2 tsp" entirely (tsp is not mg) and returned
+    // "As directed" for every drug, losing Calpol's SOS.
+    //   - trailing ":"        so "Benadryl DR: 2 tsp" keeps its name
+    //   - tsp/tbsp/drops      syrups are not dosed in mg
+    //   - "1 tab" filler      "625mg 1 tab thrice daily"
+    //   - "(10ml)" filler     "2 tsp (10ml) tid"
+    const dynamicMedRegex = /(?:(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops|\d+[\.\)])\s*)?([A-Za-z0-9\-\/]{3,}(?:\s+[A-Za-z0-9\-\/]+){0,2})\s*:?\s+(\d+(?:\.\d+)?\s*(?:mg|g|mcg|ml|iu|units?|tsp|tbsp|teaspoons?|drops?))\b(?:\s*\d*\s*(?:tab|cap|tsp|tbsp|drops?)s?\.?)?(?:\s*\([^)]{0,14}\))?(?:\s*(?:--|-|:|,|\()?\s*([0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|four times daily|OD|BD|TDS|TID|QDS|QID|HS|STAT|bedtime|morning|night|SOS|after meals|before meals)\b)?(?:\s*(?:x|for)?\s*(\d+\s*days?))?/gi;
     const writtenRxRegex = /(?:(?:Tab|Cap|Inj|Syr|Tablet|Capsule|Ointment|Drops|\d+[\.\)])\s*)?([A-Za-z0-9\-\/]{3,}(?:\s+[A-Za-z0-9\-\/]+){0,1})\s+(\d+(?:\.\d+)?)\s+([0-1]-[0-1]-[0-1]|1-0-1|1-0-0|0-0-1|1-1-1|once daily|twice daily|thrice daily|OD|BD|TDS|QDS|bedtime|morning|night|after meals|before meals)(?:\s*(?:x|for)?\s*(\d+\s*days?))?/gi;
 
     let match;
@@ -474,6 +483,28 @@ class OCREngine {
     if (fileOrBlob) {
       const recognizedText = await this.recognizeTextFromImage(fileOrBlob, onProgress);
       if (recognizedText && recognizedText.trim().length > 5) {
+        // Tesseract.js gave us the text; hand the TEXT to the backend parser rather
+        // than re-implementing normalisation and the brand-drug map here. The backend
+        // repairs OCR damage this side cannot ("hid"->"tid", "Augmestin"->"Augmentin")
+        // and is the single source of truth for entity extraction. Falls back to the
+        // local parser only if the backend is unreachable, so the kiosk still works
+        // offline - just without the brand corrections.
+        try {
+          const res = await fetch('http://localhost:5000/api/ocr/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ raw_text: recognizedText })
+          });
+          if (res.ok) {
+            const parsed = await res.json();
+            if (parsed.success && parsed.extracted) {
+              // Keep what the camera actually read, for the OCR-stream panel.
+              return { ...parsed.extracted, rawText: recognizedText };
+            }
+          }
+        } catch (err) {
+          console.warn('Backend parse unavailable, using in-browser parser:', err);
+        }
         return this.transformRawTextToEntities(recognizedText);
       }
     }

@@ -31,7 +31,11 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
       try {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+            // Handwriting needs resolution. At 1280x720 a full A5 prescription leaves
+            // roughly 20px of glyph height, which is where Tesseract starts inventing
+            // characters ("Augmentin" -> "Augmestin", "tid" -> "hid"). Ask for 1920 and
+            // let the browser fall back if the device cannot do it.
+            video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
             audio: false
           });
           streamInstance = stream;
@@ -72,7 +76,9 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const dataUrl = canvas.toDataURL('image/jpeg');
+    // Default toDataURL quality is 0.92 but re-encoding a document photo softens the
+    // thin strokes OCR depends on. 0.98 costs a few hundred KB and keeps them.
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
     setCapturedImage(dataUrl);
 
     // Stop camera stream after capture
@@ -243,7 +249,11 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover rounded-xl"
+                  /* object-cover CROPS the preview to fill the frame, so the guide box
+                     showed a tighter view than the camera actually captures — you frame
+                     the paper to what you can see and the edges land outside it.
+                     object-contain makes the preview what-you-see-is-what-you-get. */
+                  className="w-full h-full object-contain rounded-xl"
                 />
                 {!isCameraActive && (
                   <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-4 text-center space-y-2 z-10">
