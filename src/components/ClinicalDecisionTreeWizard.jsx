@@ -12,11 +12,9 @@ export default function ClinicalDecisionTreeWizard({
   treeAnswers = {}, 
   onTreeAnswersChange, 
   onCompleteTree,
-  language = 'hi'
+  language = 'en'
 }) {
-  const { t, i18n } = useTranslation();
-  const activeLang = i18n.language || language || 'en';
-  const isHindi = activeLang === 'hi';
+  const { t } = useTranslation();
   const treeConfig = DECISION_TREES[category] || DECISION_TREES.chest_pain;
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
 
@@ -63,24 +61,24 @@ export default function ClinicalDecisionTreeWizard({
   };
 
   return (
-    <div className="bg-slate-950 border-2 border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl space-y-6">
+    <div className="bg-white border border-[#E2DCBE] rounded-3xl p-5 md:p-6 shadow-xs space-y-6">
       {/* Wizard Header & Stepper */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2DCBE] pb-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
-            <Heart className="w-6 h-6 fill-current animate-pulse" />
+          <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600">
+            <Heart className="w-6 h-6 fill-current" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-extrabold text-slate-100 text-base">
-                {isHindi ? `नैदानिक निर्णय वृक्ष: ${treeConfig.name_hi || treeConfig.name}` : `Clinical Decision Tree: ${treeConfig.name}`}
+              <h3 className="font-extrabold text-[#142618] text-base">
+                Clinical Decision Tree: {treeConfig.name}
               </h3>
-              <span className="px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-300 font-mono text-xs font-bold border border-teal-500/30">
-                {isHindi ? 'डायनामिक शाखाएं' : 'DYNAMIC BRANCHING'}
+              <span className="px-2.5 py-0.5 rounded-full bg-[#59C749]/15 text-[#142618] font-mono text-xs font-bold border border-[#59C749]/30">
+                DYNAMIC BRANCHING
               </span>
             </div>
-            <p className="text-xs text-slate-400">
-              {isHindi ? 'लक्षणों एवं आपातकालीन चेतावनी का मूल्यांकन करने वाला इंटरैक्टिव निर्णय वृक्ष' : 'Interactive clinical decision tree evaluating ischemic patterns & red flags'}
+            <p className="text-xs text-[#526857]">
+              Interactive clinical decision tree evaluating ischemic patterns & red flags
             </p>
           </div>
         </div>
@@ -91,42 +89,40 @@ export default function ClinicalDecisionTreeWizard({
             <button
               key={s.id}
               onClick={() => setCurrentStepIdx(idx)}
-              className={`h-2.5 rounded-full transition-all ${
+              className={`h-2.5 rounded-full transition-all cursor-pointer ${
                 idx === currentStepIdx
-                  ? 'w-10 bg-teal-400 shadow shadow-teal-400/50'
+                  ? 'w-10 bg-[#59C749] shadow-xs'
                   : treeAnswers[s.id]
-                  ? 'w-5 bg-teal-500/50'
-                  : 'w-4 bg-slate-800'
+                  ? 'w-5 bg-[#59C749]/50'
+                  : 'w-4 bg-[#E2DCBE]'
               }`}
-              title={`${isHindi ? 'चरण' : 'Step'} ${idx + 1}: ${isHindi ? (s.title_hi || s.title) : s.title}`}
+              title={`Step ${idx + 1}: ${s.title}`}
             />
           ))}
-          <span className="text-xs font-mono text-slate-400 ml-2 font-bold">
-            {isHindi ? `चरण ${currentStepIdx + 1} कुल ${totalSteps} में से` : `Step ${currentStepIdx + 1} of ${totalSteps}`}
+          <span className="text-xs font-mono text-[#526857] ml-2 font-bold">
+            Step {currentStepIdx + 1} of {totalSteps}
           </span>
         </div>
       </div>
 
       {/* EMERGENCY RED-FLAG REALTIME ALERT BANNER */}
       {evaluation.isRedFlag && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500/50 text-rose-200 space-y-2 shadow-xl shadow-rose-500/10 animate-pulse">
+        <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 space-y-2 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 font-black text-rose-400 text-sm uppercase">
-              <ShieldAlert className="w-5 h-5 text-rose-400" />
-              {isHindi 
-                ? `🚨 गंभीर आपातकालीन चेतावनी दर्ज (${evaluation.riskPercentage}% हृदय जोखिम)`
-                : `CRITICAL ISCHEMIC RED FLAG DETECTED (${evaluation.riskPercentage}% CARDIAC RISK)`}
+            <div className="flex items-center gap-2 font-black text-rose-700 text-sm uppercase">
+              <ShieldAlert className="w-5 h-5 text-rose-600" />
+              CRITICAL ISCHEMIC RED FLAG DETECTED ({evaluation.riskPercentage}% CARDIAC RISK)
             </div>
-            <span className="px-2.5 py-0.5 rounded bg-rose-500 text-slate-950 font-black text-[10px] uppercase">
-              {isHindi ? 'आपातकालीन प्राथमिकता' : 'PRIORITY TRIAGE'}
+            <span className="px-2.5 py-0.5 rounded bg-rose-600 text-white font-black text-[10px] uppercase">
+              PRIORITY TRIAGE
             </span>
           </div>
-          <p className="text-xs text-rose-200/90 font-medium">
+          <p className="text-xs text-rose-900 font-medium">
             {evaluation.recommendation}
           </p>
           <div className="flex flex-wrap gap-1.5 pt-1">
             {evaluation.redFlags.map((flag, i) => (
-              <span key={i} className="px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-[10px] font-mono font-bold text-rose-300">
+              <span key={i} className="px-2 py-0.5 rounded bg-white border border-rose-300 text-[10px] font-mono font-bold text-rose-700">
                 🚨 {flag}
               </span>
             ))}
@@ -136,16 +132,16 @@ export default function ClinicalDecisionTreeWizard({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Decision Tree Question Step (7 Cols) */}
-        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5 shadow-xl">
+        <div className="lg:col-span-7 bg-[#FFFDF1] border border-[#E2DCBE] rounded-2xl p-5 space-y-5 shadow-xs">
           <div>
-            <span className="text-[11px] font-bold font-mono text-teal-400 uppercase tracking-widest block mb-1">
-              {isHindi ? `निर्णय वृक्ष चरण ${currentStepIdx + 1} / ${totalSteps}` : `DECISION TREE STEP ${currentStepIdx + 1} / ${totalSteps}`}
+            <span className="text-[11px] font-bold font-mono text-[#2B8A1E] uppercase tracking-widest block mb-1">
+              DECISION TREE STEP {currentStepIdx + 1} / {totalSteps}
             </span>
-            <h4 className="font-extrabold text-slate-100 text-base">
-              {getStepTitle(currentStep, activeLang)}
+            <h4 className="font-extrabold text-[#142618] text-base">
+              {getStepTitle(currentStep, 'en')}
             </h4>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {getStepSubtitle(currentStep, activeLang)}
+            <p className="text-xs text-[#526857] mt-0.5">
+              {getStepSubtitle(currentStep, 'en')}
             </p>
           </div>
 
@@ -163,16 +159,16 @@ export default function ClinicalDecisionTreeWizard({
                   className={`w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
                     isSelected
                       ? opt.isRedFlag
-                        ? 'bg-rose-500/20 border-rose-400 text-rose-200 font-bold shadow-lg shadow-rose-500/10'
-                        : 'bg-teal-500/20 border-teal-400 text-teal-200 font-bold shadow-lg shadow-teal-500/10'
-                      : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60'
+                        ? 'bg-rose-100 border-rose-400 text-rose-950 font-bold shadow-xs'
+                        : 'bg-[#59C749]/15 border-[#59C749] text-[#142618] font-bold shadow-xs'
+                      : 'bg-white border-[#E2DCBE] text-[#526857] hover:border-[#59C749]/50 hover:text-[#142618]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className={`p-2 rounded-xl border ${
                       isSelected 
-                        ? opt.isRedFlag ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-teal-500/20 text-teal-300 border-teal-500/30'
-                        : 'bg-slate-900 text-slate-400 border-slate-800'
+                        ? opt.isRedFlag ? 'bg-rose-200 text-rose-800 border-rose-300' : 'bg-[#59C749]/20 text-[#2B8A1E] border-[#59C749]/30'
+                        : 'bg-[#FFFDF1] text-[#526857] border-[#E2DCBE]'
                     }`}>
                       {opt.icon === 'Heart' && <Heart className="w-4 h-4" />}
                       {opt.icon === 'ShieldAlert' && <ShieldAlert className="w-4 h-4" />}
@@ -184,13 +180,13 @@ export default function ClinicalDecisionTreeWizard({
                       {(!opt.icon || opt.icon === 'CheckCircle2') && <CheckCircle2 className="w-4 h-4" />}
                     </span>
                     <span className="text-xs font-semibold">
-                      {getOptionLabel(opt, activeLang)}
+                      {getOptionLabel(opt, 'en')}
                     </span>
                   </div>
 
                   {opt.isRedFlag && (
-                    <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[9px] font-mono font-bold shrink-0">
-                      {isHindi ? 'खतरे की चेतावनी' : 'RED FLAG'}
+                    <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300 text-[9px] font-mono font-bold shrink-0">
+                      RED FLAG
                     </span>
                   )}
                 </button>
@@ -199,14 +195,14 @@ export default function ClinicalDecisionTreeWizard({
           </div>
 
           {/* Stepper Navigation Buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-between pt-4 border-t border-[#E2DCBE]">
             <button
               onClick={handlePrevStep}
               disabled={currentStepIdx === 0}
               className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all border cursor-pointer ${
                 currentStepIdx === 0
-                  ? 'bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed'
-                  : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
+                  ? 'bg-white border-[#E2DCBE] text-[#A0AFA2] cursor-not-allowed'
+                  : 'bg-white border-[#E2DCBE] text-[#142618] hover:bg-[#F7F4E1]'
               }`}
             >
               <ChevronLeft className="w-4 h-4" /> {t('decisionTree.prevStep')}
@@ -217,8 +213,8 @@ export default function ClinicalDecisionTreeWizard({
               disabled={!isStepAnswered()}
               className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                 isStepAnswered()
-                  ? 'bg-gradient-to-r from-teal-400 to-cyan-400 text-slate-950 shadow-lg hover:brightness-110'
-                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  ? 'bg-[#59C749] hover:bg-[#4EBD3E] text-white shadow-xs'
+                  : 'bg-[#FFFDF1] border border-[#E2DCBE] text-[#A0AFA2] cursor-not-allowed'
               }`}
             >
               {currentStepIdx === totalSteps - 1 
@@ -230,64 +226,62 @@ export default function ClinicalDecisionTreeWizard({
         </div>
 
         {/* Right Column: Realtime Differential Diagnosis Probability Breakdown (5 Cols) */}
-        <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="lg:col-span-5 bg-[#FFFDF1] border border-[#E2DCBE] rounded-2xl p-5 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between border-b border-[#E2DCBE] pb-3">
             <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20">
+              <span className="p-1.5 rounded-lg bg-[#59C749]/15 text-[#2B8A1E]">
                 <Stethoscope className="w-4 h-4" />
               </span>
-              <h4 className="font-extrabold text-sm text-slate-100">
-                {isHindi ? 'नैदानिक विभेदक निदान' : 'Clinical Differential Diagnosis'}
+              <h4 className="font-extrabold text-sm text-[#142618]">
+                Clinical Differential Diagnosis
               </h4>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/10 border border-teal-500/30 text-teal-300 font-bold">
-              {isHindi ? 'एआई विश्लेषण' : 'REALTIME AI PATHWAYS'}
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#59C749]/15 border border-[#59C749]/30 text-[#142618] font-bold">
+              REALTIME AI PATHWAYS
             </span>
           </div>
 
           {/* Differential Diagnosis Probabilities */}
           <div className="space-y-3">
             {evaluation.differentials.map((diff, idx) => (
-              <div key={idx} className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+              <div key={idx} className="p-3 rounded-xl bg-white border border-[#E2DCBE] space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-200">{diff.name}</span>
+                  <span className="font-bold text-[#142618]">{diff.name}</span>
                   <span className={`font-mono font-black ${
-                    diff.probability >= 50 ? 'text-rose-400' : diff.probability >= 25 ? 'text-amber-400' : 'text-teal-400'
+                    diff.probability >= 50 ? 'text-rose-700' : diff.probability >= 25 ? 'text-amber-800' : 'text-[#2B8A1E]'
                   }`}>
                     {diff.probability}%
                   </span>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                <div className="w-full bg-[#E2DCBE] rounded-full h-2 overflow-hidden">
                   <div
                     className={`h-full transition-all duration-500 rounded-full ${
                       diff.probability >= 50
-                        ? 'bg-gradient-to-r from-rose-500 to-red-400 shadow shadow-rose-500/30'
+                        ? 'bg-rose-600'
                         : diff.probability >= 25
-                        ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
-                        : 'bg-gradient-to-r from-teal-500 to-cyan-400'
+                        ? 'bg-amber-500'
+                        : 'bg-[#59C749]'
                     }`}
                     style={{ width: `${diff.probability}%` }}
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1">
-                  <span>{isHindi ? 'कार्रवाई:' : 'Action:'} {diff.action}</span>
-                  <span className="font-bold text-slate-300">{diff.riskLevel}</span>
+                <div className="flex items-center justify-between text-[10px] text-[#526857] font-mono pt-1">
+                  <span>Action: {diff.action}</span>
+                  <span className="font-bold text-[#142618]">{diff.riskLevel}</span>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-400 space-y-1">
-            <span className="font-bold text-teal-300 block">
-              {isHindi ? 'एआई ट्राइएज सारांश' : 'AI Triage Summary'}
+          <div className="p-3.5 rounded-xl bg-white border border-[#E2DCBE] text-xs text-[#526857] space-y-1">
+            <span className="font-bold text-[#2B8A1E] block">
+              AI Triage Summary
             </span>
             <p className="text-[11px] leading-relaxed">
-              {isHindi 
-                ? 'चयनित विकल्प एसीसी/एएचए दिशानिर्देशों के आधार पर नैदानिक निर्णय का मूल्यांकन करते हैं।'
-                : 'Selected options trigger clinical decision pathways based on ACC/AHA guidelines for chest pain evaluation.'}
+              Selected options trigger clinical decision pathways based on ACC/AHA guidelines for chest pain evaluation.
             </p>
           </div>
         </div>

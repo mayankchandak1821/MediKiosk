@@ -145,7 +145,7 @@ export default function App() {
           onLaunchLogin={() => navigateTo('/login', 'login')}
         />
       ) : (
-        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500 selection:text-slate-950 flex flex-col">
+        <div className="min-h-screen bg-[#FFFDF1] text-[#142618] font-sans selection:bg-[#59C749] selection:text-white flex flex-col">
           {/* Header Navigation */}
           <Header
             activeRole={activeRole}
@@ -184,7 +184,7 @@ export default function App() {
               <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
                 <button
                   onClick={() => setPatientSubView('dashboard')}
-                  className="px-4 py-2 bg-slate-900 border border-slate-800 text-teal-400 font-bold text-xs rounded-xl hover:bg-slate-800 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 bg-white border border-[#E2DCBE] hover:bg-[#F7F4E1] text-[#142618] font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   ← Back to Patient Dashboard
                 </button>

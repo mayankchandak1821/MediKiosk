@@ -6,7 +6,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { SAMPLE_OCR_TEMPLATES, ocrEngine } from '../services/ocrEngine';
 
-export default function VisualDocumentScanner({ scannedDoc, onDocScan, language = 'hi' }) {
+export default function VisualDocumentScanner({ scannedDoc, onDocScan, language = 'en' }) {
   const { t } = useTranslation();
   // Input Modes: 'webcam' | 'upload' | 'preset' | 'text'
   const [scanMode, setScanMode] = useState('webcam');
@@ -120,93 +120,105 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
           }
         };
         reader.readAsDataURL(file);
-      } else {
-        // PDF or non-image document file
+      } else if (file.name.endsWith('.pdf')) {
         setCapturedImage(null);
-        const data = await ocrEngine.processDocumentImage(file, null, (prog) => setOcrProgress(prog));
-        if (data?.rawText) setManualText(data.rawText);
-        onDocScan(data);
+        try {
+          const data = await ocrEngine.processDocumentImage(file, null, (prog) => setOcrProgress(prog));
+          if (data?.rawText) setManualText(data.rawText);
+          onDocScan(data);
+        } finally {
+          setIsScanning(false);
+          setOcrProgress(100);
+        }
+      } else {
+        alert('Please upload a PDF document or prescription image (PNG/JPG).');
+        setIsScanning(false);
       }
     } catch (err) {
-      console.error("File upload OCR error:", err);
-    } finally {
+      console.error('File Upload Error:', err);
       setIsScanning(false);
-      setOcrProgress(100);
     }
   };
 
-  // Handle Preset Selection
+  // Handle Demo Template Selection
   const handleScanPreset = async (preset) => {
     setActivePreset(preset);
+    setIsScanning(true);
+    setOcrProgress(20);
     setCapturedImage(null);
+
     try {
-      setIsScanning(true);
-      setOcrProgress(50);
-      const data = await ocrEngine.processDocumentImage(null, preset.id);
-      if (data?.rawText) setManualText(data.rawText);
-      onDocScan(data);
-    } catch (err) {
-      console.error("Preset scan error:", err);
+      const interval = setInterval(() => {
+        setOcrProgress(p => (p >= 90 ? 90 : p + 25));
+      }, 150);
+
+      await new Promise(res => setTimeout(res, 600));
+      clearInterval(interval);
+      setOcrProgress(100);
+
+      setManualText(preset.rawText);
+      onDocScan(preset.extracted);
     } finally {
       setIsScanning(false);
-      setOcrProgress(100);
     }
   };
 
-  // Parse Manually Typed / Edited Text
+  // Handle Manual Text Edit Parse
   const handleParseManualText = () => {
     if (!manualText.trim()) return;
-    try {
-      setIsScanning(true);
-      const data = ocrEngine.transformRawTextToEntities(manualText);
-      onDocScan(data);
-    } finally {
-      setIsScanning(false);
-      setOcrProgress(100);
-    }
+    const parsed = ocrEngine.parsePrescriptionText(manualText, 'MANUAL_ENTRY');
+    onDocScan(parsed);
+    setIsEditingText(false);
   };
 
   const handleRetake = () => {
     setCapturedImage(null);
-    setIsCameraActive(false);
+    setScanMode('webcam');
   };
 
   return (
-    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+    <div className="bg-white border border-[#E2DCBE] rounded-3xl p-5 shadow-xs space-y-4">
+      {/* Top Scanner Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2DCBE] pb-3">
         <div className="flex items-center gap-2">
-          <span className="p-2 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20">
+          <span className="p-2 rounded-xl bg-[#59C749]/15 text-[#2B8A1E]">
             <Camera className="w-5 h-5" />
           </span>
           <div>
-            <h4 className="font-bold text-sm text-slate-100">Live OCR & PDF Prescription Scanner</h4>
-            <p className="text-xs text-slate-400 font-mono text-teal-300">Upload PDF, image, or scan live with camera</p>
+            <h4 className="font-extrabold text-sm text-[#142618] flex items-center gap-2">
+              Optical Document Scanner (Prescriptions & Lab Reports)
+              <span className="px-2 py-0.5 rounded-full bg-[#59C749]/15 text-[#142618] font-mono text-[10px] uppercase border border-[#59C749]/30">
+                PyPDF + OCR Engine Active
+              </span>
+            </h4>
+            <p className="text-xs text-[#526857]">
+              Hold prior prescription or discharge summary in front of camera or upload file
+            </p>
           </div>
         </div>
 
-        {/* Scan Mode Toggle */}
-        <div className="flex items-center p-1 bg-slate-900 rounded-xl border border-slate-800 text-xs">
+        {/* Scan Mode Switcher */}
+        <div className="flex items-center p-1 bg-[#FFFDF1] rounded-xl border border-[#E2DCBE] text-xs">
           <button
-            onClick={() => { setScanMode('webcam'); handleRetake(); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
-              scanMode === 'webcam' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+            onClick={() => { setScanMode('webcam'); setCapturedImage(null); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              scanMode === 'webcam' ? 'bg-[#59C749] text-white shadow-xs' : 'text-[#526857] hover:text-[#142618]'
             }`}
           >
-            <Video className="w-3.5 h-3.5" /> Live Camera
+            <Camera className="w-3.5 h-3.5" /> Live Camera
           </button>
           <button
             onClick={() => setScanMode('upload')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
-              scanMode === 'upload' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              scanMode === 'upload' ? 'bg-[#59C749] text-white shadow-xs' : 'text-[#526857] hover:text-[#142618]'
             }`}
           >
             <Upload className="w-3.5 h-3.5" /> Upload File/PDF
           </button>
           <button
             onClick={() => setScanMode('preset')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
-              scanMode === 'preset' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              scanMode === 'preset' ? 'bg-[#59C749] text-white shadow-xs' : 'text-[#526857] hover:text-[#142618]'
             }`}
           >
             <FileText className="w-3.5 h-3.5" /> Demo Presets
@@ -217,24 +229,24 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Live Camera / Captured Image Viewfinder (6 Cols) */}
         <div className="lg:col-span-6 space-y-3">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+          <span className="text-xs font-bold text-[#526857] uppercase tracking-wider block">
             1. Document Camera Viewfinder
           </span>
 
-          <div className="relative aspect-[4/3] bg-slate-900 rounded-2xl border-2 border-slate-800 overflow-hidden flex flex-col items-center justify-center p-2 shadow-inner">
+          <div className="relative aspect-[4/3] bg-[#FFFDF1] rounded-2xl border-2 border-[#E2DCBE] overflow-hidden flex flex-col items-center justify-center p-2 shadow-inner">
             {/* Viewfinder Target Frame Overlay */}
-            <div className="absolute inset-4 border-2 border-dashed border-teal-400/50 rounded-xl pointer-events-none z-20 flex flex-col justify-between p-3">
-              <div className="flex justify-between text-[10px] text-teal-300 font-mono uppercase bg-slate-950/70 px-2 py-0.5 rounded w-fit">
+            <div className="absolute inset-4 border-2 border-dashed border-[#59C749]/60 rounded-xl pointer-events-none z-20 flex flex-col justify-between p-3">
+              <div className="flex justify-between text-[10px] text-[#142618] font-mono uppercase bg-white/90 border border-[#E2DCBE] px-2 py-0.5 rounded w-fit">
                 <span>[ALIGN DOCUMENT INSIDE FRAME]</span>
               </div>
-              <div className="flex justify-between text-[10px] text-teal-300 font-mono uppercase bg-slate-950/70 px-2 py-0.5 rounded w-fit self-end">
+              <div className="flex justify-between text-[10px] text-[#142618] font-mono uppercase bg-white/90 border border-[#E2DCBE] px-2 py-0.5 rounded w-fit self-end">
                 <span>OCR & PDF TEXT PARSER READY</span>
               </div>
             </div>
 
             {/* Laser Line Scanning Animation */}
             {isScanning && (
-              <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-teal-400 to-transparent shadow-lg shadow-teal-400 animate-bounce top-1/2 z-30" />
+              <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#59C749] to-transparent shadow-sm top-1/2 z-30" />
             )}
 
             {/* MODE A: LIVE WEBCAM VIDEO STREAM */}
@@ -248,14 +260,14 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
                   className="w-full h-full object-cover rounded-xl"
                 />
                 {!isCameraActive && (
-                  <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-4 text-center space-y-2 z-10">
-                    <VideoOff className="w-8 h-8 text-slate-500" />
-                    <p className="text-xs text-slate-400 font-medium">
+                  <div className="absolute inset-0 bg-[#FFFDF1]/95 flex flex-col items-center justify-center p-4 text-center space-y-2 z-10">
+                    <VideoOff className="w-8 h-8 text-[#526857]" />
+                    <p className="text-xs text-[#526857] font-medium">
                       {cameraError || 'Camera initializing or stream inactive.'}
                     </p>
                     <button
                       onClick={() => setScanMode('preset')}
-                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold rounded-lg"
+                      className="px-3 py-1.5 bg-white hover:bg-[#F7F4E1] text-[#142618] border border-[#E2DCBE] text-xs font-bold rounded-lg cursor-pointer"
                     >
                       Use Demo Presets Instead
                     </button>
@@ -275,8 +287,8 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
                   />
                 ) : (
                   <div className="p-8 text-center space-y-3">
-                    <Upload className="w-10 h-10 text-teal-400 mx-auto" />
-                    <p className="text-xs text-slate-300 font-bold">Upload PDF document or prescription image</p>
+                    <Upload className="w-10 h-10 text-[#59C749] mx-auto" />
+                    <p className="text-xs text-[#142618] font-bold">Upload PDF document or prescription image</p>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -286,7 +298,7 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-4 py-2 bg-teal-500 text-slate-950 font-bold text-xs rounded-xl shadow hover:bg-teal-400"
+                      className="px-4 py-2 bg-[#59C749] text-white font-bold text-xs rounded-xl shadow-xs hover:bg-[#4EBD3E] cursor-pointer"
                     >
                       Select File (.pdf / .png / .jpg)
                     </button>
@@ -297,12 +309,12 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
 
             {/* MODE C: DEMO PRESETS PREVIEW */}
             {scanMode === 'preset' && !capturedImage && (
-              <div className="w-full max-w-xs p-4 bg-slate-950/90 border border-slate-800 rounded-xl text-left space-y-2 font-mono text-[11px] text-slate-300 z-10">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                  <span className="font-bold text-teal-300 text-xs">{activePreset.name}</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[9px] text-slate-400">{activePreset.type}</span>
+              <div className="w-full max-w-xs p-4 bg-white/95 border border-[#E2DCBE] rounded-xl text-left space-y-2 font-mono text-[11px] text-[#142618] z-10 shadow-sm">
+                <div className="flex items-center justify-between border-b border-[#E2DCBE] pb-1.5">
+                  <span className="font-bold text-[#142618] text-xs">{activePreset.name}</span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#FFFDF1] border border-[#E2DCBE] text-[9px] text-[#526857]">{activePreset.type}</span>
                 </div>
-                <pre className="text-[10px] text-slate-400 whitespace-pre-wrap font-mono max-h-32 overflow-hidden leading-relaxed">
+                <pre className="text-[10px] text-[#526857] whitespace-pre-wrap font-mono max-h-32 overflow-hidden leading-relaxed">
                   {activePreset.rawText}
                 </pre>
               </div>
@@ -317,18 +329,18 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
                 <button
                   onClick={handleCaptureSnapshot}
                   disabled={isScanning}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-teal-400 to-cyan-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-xl hover:scale-105 transition-all"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-[#59C749] hover:bg-[#4EBD3E] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
                 >
-                  <Aperture className="w-4 h-4 animate-spin-slow" /> Capture & Scan Document
+                  <Aperture className="w-4 h-4" /> Capture & Scan Document
                 </button>
               )}
 
               {capturedImage && (
                 <button
                   onClick={handleRetake}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 shadow-lg"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F7F4E1] text-[#142618] font-bold text-xs rounded-xl border border-[#E2DCBE] shadow-xs cursor-pointer"
                 >
-                  <RotateCcw className="w-3.5 h-3.5 text-teal-400" /> Retake / Scan Another
+                  <RotateCcw className="w-3.5 h-3.5 text-[#59C749]" /> Retake / Scan Another
                 </button>
               )}
 
@@ -339,10 +351,10 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
                       key={preset.id}
                       onClick={() => handleScanPreset(preset)}
                       disabled={isScanning}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                         activePreset.id === preset.id
-                          ? 'bg-teal-500 text-slate-950 border-teal-400 shadow-md'
-                          : 'bg-slate-950/80 border-slate-700 text-slate-300 hover:bg-slate-800'
+                          ? 'bg-[#59C749] text-white border-[#59C749] shadow-xs'
+                          : 'bg-white border-[#E2DCBE] text-[#526857] hover:bg-[#F7F4E1]'
                       }`}
                     >
                       Scan {preset.type === 'PRESCRIPTION' ? 'Prescription' : 'Lab Report'}
@@ -356,65 +368,65 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
 
         {/* Right Column: Extracted OCR Entities & Raw Text Inspector (6 Cols) */}
         <div className="lg:col-span-6 space-y-3">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+          <span className="text-xs font-bold text-[#526857] uppercase tracking-wider block">
             2. Extracted Document Intelligence & OCR Text
           </span>
 
           {isScanning ? (
-            <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center space-y-3 min-h-[300px]">
-              <RefreshCw className="w-8 h-8 text-teal-400 animate-spin" />
-              <p className="text-xs font-bold text-slate-200">Reading Document Text & PDF Streams...</p>
-              <div className="w-48 bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+            <div className="p-8 rounded-2xl bg-[#FFFDF1] border border-[#E2DCBE] flex flex-col items-center justify-center space-y-3 min-h-[300px]">
+              <RefreshCw className="w-8 h-8 text-[#59C749] animate-spin" />
+              <p className="text-xs font-bold text-[#142618]">Reading Document Text & PDF Streams...</p>
+              <div className="w-48 bg-[#E2DCBE] rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-teal-400 to-cyan-400 h-full transition-all duration-300"
+                  className="bg-[#59C749] h-full transition-all duration-300"
                   style={{ width: `${ocrProgress || 30}%` }}
                 />
               </div>
-              <span className="text-[11px] font-mono text-teal-300 font-bold">{ocrProgress || 30}% Completed</span>
+              <span className="text-[11px] font-mono text-[#2B8A1E] font-bold">{ocrProgress || 30}% Completed</span>
             </div>
           ) : scannedDoc ? (
-            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 min-h-[300px]">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <span className="font-bold text-sm text-teal-300 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> {scannedDoc.docType} Digitized Entities
+            <div className="p-5 rounded-2xl bg-[#FFFDF1] border border-[#E2DCBE] space-y-4 min-h-[300px]">
+              <div className="flex items-center justify-between border-b border-[#E2DCBE] pb-3">
+                <span className="font-bold text-sm text-[#142618] flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#2B8A1E]" /> {scannedDoc.docType} Digitized Entities
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[11px] font-mono font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#59C749]/15 border border-[#59C749]/30 text-[#142618] text-[11px] font-mono font-bold">
                     ⚡ {scannedDoc.confidenceScore || 90}% AI Confidence
                   </span>
-                  <span className="text-xs text-slate-400 font-mono">Date: {scannedDoc.date}</span>
+                  <span className="text-xs text-[#526857] font-mono">Date: {scannedDoc.date}</span>
                 </div>
               </div>
 
               {/* Extracted Vitals Written on Paper */}
               {scannedDoc.vitalsFromDoc && Object.keys(scannedDoc.vitalsFromDoc).length > 0 && (
-                <div className="space-y-2 p-3 bg-teal-950/30 border border-teal-500/20 rounded-xl">
-                  <span className="text-xs font-bold text-teal-300 uppercase tracking-wider block flex items-center gap-1.5">
+                <div className="space-y-2 p-3 bg-white border border-[#E2DCBE] rounded-xl">
+                  <span className="text-xs font-bold text-[#142618] uppercase tracking-wider block flex items-center gap-1.5">
                     🩺 Extracted Vitals (Written on Document)
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                     {scannedDoc.vitalsFromDoc.blood_pressure && (
-                      <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400 block text-[10px]">Blood Pressure</span>
-                        <span className="font-bold text-teal-300">{scannedDoc.vitalsFromDoc.blood_pressure}</span>
+                      <div className="bg-[#FFFDF1] p-2 rounded-lg border border-[#E2DCBE]">
+                        <span className="text-[#526857] block text-[10px]">Blood Pressure</span>
+                        <span className="font-bold text-[#142618]">{scannedDoc.vitalsFromDoc.blood_pressure}</span>
                       </div>
                     )}
                     {scannedDoc.vitalsFromDoc.pulse_rate && (
-                      <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400 block text-[10px]">Pulse Rate</span>
-                        <span className="font-bold text-teal-300">{scannedDoc.vitalsFromDoc.pulse_rate}</span>
+                      <div className="bg-[#FFFDF1] p-2 rounded-lg border border-[#E2DCBE]">
+                        <span className="text-[#526857] block text-[10px]">Pulse Rate</span>
+                        <span className="font-bold text-[#142618]">{scannedDoc.vitalsFromDoc.pulse_rate}</span>
                       </div>
                     )}
                     {scannedDoc.vitalsFromDoc.spo2_percent && (
-                      <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400 block text-[10px]">Oxygen (SpO2)</span>
-                        <span className="font-bold text-teal-300">{scannedDoc.vitalsFromDoc.spo2_percent}</span>
+                      <div className="bg-[#FFFDF1] p-2 rounded-lg border border-[#E2DCBE]">
+                        <span className="text-[#526857] block text-[10px]">Oxygen (SpO2)</span>
+                        <span className="font-bold text-[#2B8A1E]">{scannedDoc.vitalsFromDoc.spo2_percent}</span>
                       </div>
                     )}
                     {scannedDoc.vitalsFromDoc.temperature && (
-                      <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400 block text-[10px]">Temperature</span>
-                        <span className="font-bold text-teal-300">{scannedDoc.vitalsFromDoc.temperature}</span>
+                      <div className="bg-[#FFFDF1] p-2 rounded-lg border border-[#E2DCBE]">
+                        <span className="text-[#526857] block text-[10px]">Temperature</span>
+                        <span className="font-bold text-amber-800">{scannedDoc.vitalsFromDoc.temperature}</span>
                       </div>
                     )}
                   </div>
@@ -424,12 +436,12 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
               {/* Extracted Written Clinical Notes & Doctor Advice */}
               {scannedDoc.clinicalNotes?.length > 0 && (
                 <div className="space-y-2">
-                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-amber-900 uppercase tracking-wider block">
                     Written Clinical Notes & OPD Impressions
                   </span>
                   <div className="space-y-1.5">
                     {scannedDoc.clinicalNotes.map((note, idx) => (
-                      <div key={idx} className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 font-medium">
+                      <div key={idx} className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 font-medium">
                         📝 {note}
                       </div>
                     ))}
@@ -440,22 +452,22 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
               {/* Extracted Active Medications */}
               {scannedDoc.medications?.length > 0 ? (
                 <div className="space-y-2">
-                  <span className="text-xs font-bold text-teal-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-[#142618] uppercase tracking-wider block">
                     Prescribed Active Medications Extracted
                   </span>
                   <div className="space-y-2">
                     {scannedDoc.medications.map((m, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2 text-xs">
+                      <div key={idx} className="p-3 rounded-xl bg-white border border-[#E2DCBE] flex items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-2.5">
-                          <span className="p-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold text-xs">
+                          <span className="p-1.5 rounded-lg bg-[#59C749]/15 text-[#2B8A1E] font-bold text-xs">
                             💊
                           </span>
                           <div>
-                            <span className="font-bold text-slate-100">{m.name} {m.dosage}</span>
-                            <span className="text-slate-400 block text-[11px]">{m.frequency} ({m.duration})</span>
+                            <span className="font-bold text-[#142618]">{m.name} {m.dosage}</span>
+                            <span className="text-[#526857] block text-[11px]">{m.frequency} ({m.duration})</span>
                           </div>
                         </div>
-                        <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded text-[10px] font-mono font-bold">
+                        <span className="px-2 py-0.5 bg-[#59C749]/15 border border-[#59C749]/30 text-[#2B8A1E] rounded text-[10px] font-mono font-bold">
                           ACTIVE
                         </span>
                       </div>
@@ -463,11 +475,11 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
                   </div>
                 </div>
               ) : (
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1.5">
-                  <div className="flex items-center gap-2 text-amber-300 font-bold">
+                <div className="p-3.5 rounded-xl bg-white border border-[#E2DCBE] text-xs space-y-1.5">
+                  <div className="flex items-center gap-2 text-amber-800 font-bold">
                     <AlertCircle className="w-4 h-4" /> No specific medication patterns detected in scanned text
                   </div>
-                  <p className="text-slate-400 text-[11px]">
+                  <p className="text-[#526857] text-[11px]">
                     You can view the raw scanned text below or edit/paste your prescription text directly to extract entities instantly.
                   </p>
                 </div>
@@ -476,17 +488,17 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
               {/* Extracted Lab Values */}
               {scannedDoc.investigations?.length > 0 && (
                 <div className="space-y-2">
-                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-[#142618] uppercase tracking-wider block">
                     Pathology Laboratory Findings
                   </span>
                   <div className="space-y-2">
                     {scannedDoc.investigations.map((l, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2 text-xs">
-                        <span className="font-semibold text-slate-200">{l.testName}</span>
+                      <div key={idx} className="p-3 rounded-xl bg-white border border-[#E2DCBE] flex items-center justify-between gap-2 text-xs">
+                        <span className="font-semibold text-[#142618]">{l.testName}</span>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-slate-100 font-bold">{l.value}</span>
+                          <span className="font-mono text-[#142618] font-bold">{l.value}</span>
                           {l.isAbnormal && (
-                            <span className="px-2 py-0.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 font-extrabold rounded text-[10px]">
+                            <span className="px-2 py-0.5 bg-amber-100 border border-amber-300 text-amber-900 font-bold rounded text-[10px]">
                               {l.flag}
                             </span>
                           )}
@@ -498,14 +510,14 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
               )}
 
               {/* RAW SCANNED TEXT INSPECTOR & MANUAL EDIT BOX */}
-              <div className="pt-3 border-t border-slate-800 space-y-2">
+              <div className="pt-3 border-t border-[#E2DCBE] space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-teal-400" /> Scanned Document Text (OCR Stream)
+                  <span className="text-xs font-bold text-[#526857] uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-[#59C749]" /> Scanned Document Text (OCR Stream)
                   </span>
                   <button
                     onClick={() => setIsEditingText(!isEditingText)}
-                    className="text-[11px] font-bold text-teal-400 hover:text-teal-300 flex items-center gap-1"
+                    className="text-[11px] font-bold text-[#2B8A1E] hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Edit3 className="w-3 h-3" /> {isEditingText ? 'Hide Editor' : 'Edit / Paste Text'}
                   </button>
@@ -517,17 +529,17 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan, language 
                       value={manualText}
                       onChange={(e) => setManualText(e.target.value)}
                       placeholder="Paste or type prescription text here (e.g. Tab Lisinopril 10mg once daily...)"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 font-mono focus:outline-none focus:border-teal-500 h-28"
+                      className="w-full bg-white border border-[#DED7BD] rounded-xl p-3 text-xs text-[#142618] font-mono focus:outline-none focus:border-[#59C749] focus:ring-1 focus:ring-[#59C749] h-28"
                     />
                     <button
                       onClick={handleParseManualText}
-                      className="px-4 py-2 bg-teal-500 text-slate-950 font-bold text-xs rounded-xl shadow hover:bg-teal-400 flex items-center gap-1.5"
+                      className="px-4 py-2 bg-[#59C749] text-white font-bold text-xs rounded-xl shadow-xs hover:bg-[#4EBD3E] flex items-center gap-1.5 cursor-pointer"
                     >
                       <Play className="w-3.5 h-3.5" /> Parse Prescription Text Now
                     </button>
                   </div>
                 ) : (
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300 max-h-32 overflow-y-auto whitespace-pre-wrap">
+                  <div className="p-3 rounded-xl bg-white border border-[#E2DCBE] font-mono text-[11px] text-[#142618] max-h-32 overflow-y-auto whitespace-pre-wrap">
                     {scannedDoc.rawText || manualText || 'No text extracted from document file yet.'}
                   </div>
                 )}

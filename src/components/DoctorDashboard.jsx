@@ -142,19 +142,19 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
       {/* Top Banner & Session Counters */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-[#E2DCBE] rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-500 text-slate-950 font-bold">
+          <div className="p-3 rounded-xl bg-[#59C749] text-white font-bold shadow-sm">
             <Stethoscope className="w-6 h-6 stroke-[2.5]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-extrabold text-lg text-slate-100">Physician Consultation EMR Portal</h2>
-              <span className="text-xs text-[#59C749] font-semibold">
+              <h2 className="font-extrabold text-lg text-[#142618]">Physician Consultation EMR Portal</h2>
+              <span className="text-xs text-[#2B8A1E] font-bold">
                 Session #{opdSessionNumber}
               </span>
             </div>
-            <p className="text-xs text-slate-400">Pre-formatted AI Clinical Extraction & History Synthesis</p>
+            <p className="text-xs text-[#526857]">Pre-formatted AI Clinical Extraction & History Synthesis</p>
           </div>
         </div>
 
@@ -162,50 +162,50 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
         <div className="flex flex-wrap items-center gap-3 text-xs">
           <button
             onClick={toggleDoctorAvailability}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold transition-all border cursor-pointer ${
               isDoctorAvailable
-                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/30 shadow'
-                : 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow animate-pulse'
+                ? 'bg-[#59C749]/15 border-[#59C749] text-[#142618] hover:bg-[#59C749]/25 shadow-xs'
+                : 'bg-rose-100 border-rose-300 text-rose-900 hover:bg-rose-200 shadow-xs'
             }`}
           >
             <Power className="w-4 h-4" />
             {isDoctorAvailable ? '🟢 Doctor Available' : '🔴 Doctor Not Available'}
           </button>
 
-          <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-            <span className="text-emerald-400 block text-[10px] uppercase font-bold">Session Signed Off</span>
-            <span className="font-mono font-black text-emerald-300 text-sm">
+          <div className="px-3 py-1.5 rounded-xl bg-[#59C749]/10 border border-[#59C749]/30">
+            <span className="text-[#2B8A1E] block text-[10px] uppercase font-bold">Session Signed Off</span>
+            <span className="font-mono font-black text-[#142618] text-sm">
               {signedOffCount} Patients
             </span>
           </div>
 
-          <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800">
-            <span className="text-slate-500 block text-[10px]">Active Waiting</span>
-            <span className="font-bold text-slate-200 text-sm">{waitingCount} Patients</span>
+          <div className="px-3 py-1.5 rounded-xl bg-[#FFFDF1] border border-[#E2DCBE]">
+            <span className="text-[#526857] block text-[10px]">Active Waiting</span>
+            <span className="font-bold text-[#142618] text-sm">{waitingCount} Patients</span>
           </div>
 
-          <div className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30">
-            <span className="text-rose-400 block text-[10px]">Red Flags</span>
-            <span className="font-bold text-rose-300 text-sm">{redFlagCount} Critical</span>
+          <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200">
+            <span className="text-rose-700 block text-[10px] font-bold">Red Flags</span>
+            <span className="font-bold text-rose-950 text-sm">{redFlagCount} Critical</span>
           </div>
         </div>
       </div>
 
       {/* Doctor Not Available Banner Alert */}
       {!isDoctorAvailable && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 text-rose-200 flex items-center justify-between shadow-xl">
+        <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3">
-            <UserX className="w-6 h-6 text-rose-400 shrink-0" />
+            <UserX className="w-6 h-6 text-rose-600 shrink-0" />
             <div>
-              <h3 className="font-extrabold text-rose-300 text-base">OPD SESSION PAUSED: DOCTOR NOT AVAILABLE</h3>
-              <p className="text-xs text-rose-200/90 mt-0.5">
+              <h3 className="font-extrabold text-rose-950 text-base">OPD SESSION PAUSED: DOCTOR NOT AVAILABLE</h3>
+              <p className="text-xs text-rose-800 mt-0.5">
                 Doctor is currently on break or emergency call. New OPD intake sessions are paused.
               </p>
             </div>
           </div>
           <button
             onClick={toggleDoctorAvailability}
-            className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs hover:brightness-110 shadow"
+            className="px-4 py-2 bg-[#59C749] text-white font-bold rounded-xl text-xs hover:bg-[#4EBD3E] shadow-sm cursor-pointer"
           >
             Resume OPD Session #{opdSessionNumber + 1}
           </button>
@@ -214,33 +214,33 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Patient OPD Queue List (4 Cols) */}
-        <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl h-fit">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="font-bold text-sm text-slate-200 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-teal-400" /> OPD Live Queue
+        <div className="lg:col-span-4 bg-white border border-[#E2DCBE] rounded-2xl p-4 space-y-4 shadow-xs h-fit">
+          <div className="flex items-center justify-between border-b border-[#E2DCBE] pb-3">
+            <h3 className="font-bold text-sm text-[#142618] flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#59C749]" /> OPD Live Queue
             </h3>
 
-            <div className="flex items-center p-1 bg-slate-950 rounded-lg border border-slate-800 text-[10px]">
+            <div className="flex items-center p-1 bg-[#FFFDF1] rounded-lg border border-[#E2DCBE] text-[10px]">
               <button
                 onClick={() => setQueueFilter('all')}
-                className={`px-2 py-1 rounded font-bold transition-all ${
-                  queueFilter === 'all' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400'
+                className={`px-2 py-1 rounded font-bold transition-all cursor-pointer ${
+                  queueFilter === 'all' ? 'bg-[#59C749] text-white shadow-xs' : 'text-[#526857] hover:text-[#142618]'
                 }`}
               >
                 All ({encounterQueue.length})
               </button>
               <button
                 onClick={() => setQueueFilter('active')}
-                className={`px-2 py-1 rounded font-bold transition-all ${
-                  queueFilter === 'active' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400'
+                className={`px-2 py-1 rounded font-bold transition-all cursor-pointer ${
+                  queueFilter === 'active' ? 'bg-[#59C749] text-white shadow-xs' : 'text-[#526857] hover:text-[#142618]'
                 }`}
               >
                 Waiting ({waitingCount})
               </button>
               <button
                 onClick={() => setQueueFilter('signed_off')}
-                className={`px-2 py-1 rounded font-bold transition-all ${
-                  queueFilter === 'signed_off' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400'
+                className={`px-2 py-1 rounded font-bold transition-all cursor-pointer ${
+                  queueFilter === 'signed_off' ? 'bg-[#59C749] text-white shadow-xs' : 'text-[#526857] hover:text-[#142618]'
                 }`}
               >
                 Signed Off ({signedOffCount})
@@ -251,9 +251,9 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
           <div className="space-y-2.5 max-h-[75vh] overflow-y-auto pr-1">
             {filteredQueue.length === 0 ? (
               <div className="p-8 text-center space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-teal-400/50 mx-auto" />
-                <p className="text-xs text-slate-300 font-bold">No patients in OPD queue yet.</p>
-                <p className="text-[11px] text-slate-500 italic">
+                <CheckCircle2 className="w-8 h-8 text-[#59C749]/50 mx-auto" />
+                <p className="text-xs text-[#142618] font-bold">No patients in OPD queue yet.</p>
+                <p className="text-[11px] text-[#526857] italic">
                   Register new patients at the Kiosk to populate live OPD queue.
                 </p>
               </div>
@@ -264,39 +264,39 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                   <button
                     key={enc.id}
                     onClick={() => setActiveEncounter(enc)}
-                    className={`w-full p-3.5 rounded-xl border text-left transition-all ${
+                    className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                       selected?.id === enc.id
                         ? isSigned
-                          ? 'bg-emerald-500/20 border-emerald-400 shadow-lg shadow-emerald-500/10'
+                          ? 'bg-[#59C749]/20 border-[#59C749] shadow-xs'
                           : enc.triage?.isRedFlag
-                          ? 'bg-rose-500/20 border-rose-500/60 shadow-lg shadow-rose-500/10'
-                          : 'bg-teal-500/20 border-teal-400 shadow-lg shadow-teal-500/10'
+                          ? 'bg-rose-100 border-rose-400 shadow-xs'
+                          : 'bg-[#59C749]/15 border-[#59C749] shadow-xs'
                         : isSigned
-                        ? 'bg-emerald-500/10 border-emerald-500/30'
+                        ? 'bg-[#FFFDF1] border-[#E2DCBE]'
                         : enc.triage?.isRedFlag
-                        ? 'bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/20'
-                        : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                        ? 'bg-rose-50 border-rose-200 hover:bg-rose-100'
+                        : 'bg-[#FFFDF1] border-[#E2DCBE] hover:border-[#59C749]/50'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-xs text-slate-100 flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-slate-400" /> {enc.patient?.full_name || 'Patient'}
+                      <span className="font-bold text-xs text-[#142618] flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-[#526857]" /> {enc.patient?.full_name || 'Patient'}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">{enc.timestamp}</span>
+                      <span className="text-[10px] text-[#526857] font-mono">{enc.timestamp}</span>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
+                    <div className="flex items-center justify-between text-xs text-[#526857] mt-1">
                       <span>{enc.symptomCategory || 'Routine OPD'}</span>
                       {isSigned ? (
-                        <span className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+                        <span className="text-xs text-[#2B8A1E] font-bold flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Signed Off
                         </span>
                       ) : enc.triage?.isRedFlag ? (
-                        <span className="text-xs text-rose-400 font-bold">
+                        <span className="text-xs text-rose-700 font-bold">
                           {enc.triage?.riskPercentage ? `${enc.triage.riskPercentage}% Red Flag` : 'Red Flag'}
                         </span>
                       ) : (
-                        <span className="text-xs text-[#59C749] font-medium">
+                        <span className="text-xs text-[#2B8A1E] font-medium">
                           {enc.triage?.riskPercentage ? `${enc.triage.riskPercentage}% Routine` : 'Routine'}
                         </span>
                       )}
@@ -309,32 +309,32 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
         </div>
 
         {/* Right Column: Detailed AI Extracted Summary & Record (8 Cols) */}
-        <div className="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div className="lg:col-span-8 bg-white border border-[#E2DCBE] rounded-2xl p-6 shadow-xs space-y-6">
           {selected && selected.patient ? (
             <>
               {/* Patient Header & Priority Status */}
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2DCBE] pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-200 text-lg">
+                  <div className="w-12 h-12 rounded-xl bg-[#FFFDF1] border border-[#E2DCBE] flex items-center justify-center font-bold text-[#142618] text-lg">
                     {(selected.patient?.full_name || 'P').charAt(0)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-extrabold text-lg text-slate-100">{selected.patient?.full_name || 'Patient Name'}</h3>
-                      <span className="text-xs text-slate-400">
+                      <h3 className="font-extrabold text-lg text-[#142618]">{selected.patient?.full_name || 'Patient Name'}</h3>
+                      <span className="text-xs text-[#526857]">
                         {selected.patient?.gender || 'M'}, {selected.patient?.age || '52'} Yrs
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 font-mono">ABHA: {selected.patient?.abha_id || '91-8840-2910-4491'} | Encounter: {selected.id}</p>
+                    <p className="text-xs text-[#526857] font-mono">ABHA: {selected.patient?.abha_id || '91-8840-2910-4491'} | Encounter: {selected.id}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowDocOcrText(!showDocOcrText)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors border border-slate-700"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFFDF1] hover:bg-[#F7F4E1] text-[#142618] text-xs font-semibold rounded-lg transition-colors border border-[#E2DCBE] cursor-pointer"
                   >
-                    <Eye className="w-4 h-4 text-teal-400" />
+                    <Eye className="w-4 h-4 text-[#59C749]" />
                     {showDocOcrText ? 'Hide Document Text' : 'View Prescription Text'}
                   </button>
                 </div>
@@ -342,17 +342,17 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
 
               {/* Signed Off Status Banner if Completed */}
               {isCurrentSignedOff && (
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-200 flex items-center justify-between text-xs shadow-lg">
+                <div className="p-4 rounded-2xl bg-[#59C749]/10 border border-[#59C749]/40 text-[#142618] flex items-center justify-between text-xs shadow-xs">
                   <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-[#2B8A1E] shrink-0" />
                     <div>
-                      <span className="font-bold text-slate-100 text-sm block">Clinical Encounter Signed Off & Discharged</span>
-                      <span className="text-slate-400">Session #{opdSessionNumber} • Saved in MongoDB</span>
+                      <span className="font-bold text-[#142618] text-sm block">Clinical Encounter Signed Off & Discharged</span>
+                      <span className="text-[#526857]">Session #{opdSessionNumber} • Saved in Records</span>
                     </div>
                   </div>
                   <button
                     onClick={downloadSignedRxSummary}
-                    className="px-3.5 py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl flex items-center gap-1.5 hover:brightness-110 shadow"
+                    className="px-3.5 py-2 bg-[#59C749] text-white font-bold rounded-xl flex items-center gap-1.5 hover:bg-[#4EBD3E] shadow-xs cursor-pointer"
                   >
                     <Printer className="w-4 h-4" /> Download Signed Rx Summary
                   </button>
@@ -360,84 +360,84 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
               )}
 
               {/* PAST MEDICAL HISTORY VS TODAY'S OPD COMPLAINT COMPARISON CARD */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-cyan-500/30 shadow-xl space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="p-5 rounded-2xl bg-[#FFFDF1] border border-[#E2DCBE] shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-[#E2DCBE] pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    <span className="p-1.5 rounded-lg bg-[#59C749]/15 text-[#2B8A1E]">
                       <GitCompare className="w-4 h-4" />
                     </span>
-                    <h4 className="font-extrabold text-sm text-slate-100 tracking-tight">
+                    <h4 className="font-extrabold text-sm text-[#142618] tracking-tight">
                       AI History Synthesis: Prescription History vs Today's OPD Problem
                     </h4>
                   </div>
-                  <span className="text-xs text-cyan-400 font-semibold">
+                  <span className="text-xs text-[#2B8A1E] font-bold">
                     Comparative Synthesis
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   {/* Past History from Prescription */}
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+                  <div className="p-3.5 rounded-xl bg-white border border-[#E2DCBE] space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-teal-400 uppercase tracking-wider text-[10px]">
+                      <span className="font-bold text-[#2B8A1E] uppercase tracking-wider text-[10px]">
                         1. Past History & Active Rx (From Prescription)
                       </span>
-                      <FileText className="w-3.5 h-3.5 text-teal-400" />
+                      <FileText className="w-3.5 h-3.5 text-[#59C749]" />
                     </div>
 
                     <div>
-                      <span className="text-slate-500 block text-[10px]">Document Past Diagnoses:</span>
+                      <span className="text-[#526857] block text-[10px]">Document Past Diagnoses:</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {(selected.scannedDoc?.pastMedicalHistory || selected.scannedDoc?.diagnoses || []).length > 0 ? (
                           (selected.scannedDoc?.pastMedicalHistory || selected.scannedDoc?.diagnoses).map((d, i) => (
-                            <span key={i} className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 font-bold border border-teal-500/30 text-[10px]">
+                            <span key={i} className="px-2 py-0.5 rounded bg-[#59C749]/15 text-[#142618] font-bold border border-[#59C749]/30 text-[10px]">
                               {d}
                             </span>
                           ))
                         ) : (
-                          <span className="text-slate-400 italic">No past chronic condition extracted</span>
+                          <span className="text-[#526857] italic">No past chronic condition extracted</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-800/80">
-                      <span className="text-slate-500 block text-[10px]">Extracted Active Medications:</span>
+                    <div className="pt-2 border-t border-[#E2DCBE]">
+                      <span className="text-[#526857] block text-[10px]">Extracted Active Medications:</span>
                       <div className="space-y-1 mt-1">
                         {selected.scannedDoc?.medications?.length > 0 ? (
                           selected.scannedDoc.medications.map((m, i) => (
-                            <div key={i} className="flex items-center justify-between font-mono text-[11px] bg-slate-950 px-2 py-1 rounded">
-                              <span className="text-slate-200 font-bold">💊 {m.name}</span>
-                              <span className="text-teal-400">{m.dosage} ({m.frequency})</span>
+                            <div key={i} className="flex items-center justify-between font-mono text-[11px] bg-[#FFFDF1] px-2 py-1 rounded border border-[#E2DCBE]">
+                              <span className="text-[#142618] font-bold">💊 {m.name}</span>
+                              <span className="text-[#2B8A1E] font-semibold">{m.dosage} ({m.frequency})</span>
                             </div>
                           ))
                         ) : (
-                          <span className="text-slate-400 italic">No prescription meds extracted</span>
+                          <span className="text-[#526857] italic">No prescription meds extracted</span>
                         )}
                       </div>
                     </div>
                   </div>
 
                   {/* Today's OPD Problem from Kiosk */}
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+                  <div className="p-3.5 rounded-xl bg-white border border-[#E2DCBE] space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-cyan-400 uppercase tracking-wider text-[10px]">
+                      <span className="font-bold text-[#142618] uppercase tracking-wider text-[10px]">
                         2. Today's Chief Complaint (Kiosk Intake)
                       </span>
-                      <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                      <Activity className="w-3.5 h-3.5 text-[#59C749]" />
                     </div>
 
                     <div className="space-y-1.5 font-mono">
                       <div>
-                        <span className="text-slate-500 block text-[10px]">Visit Category:</span>
-                        <span className="text-slate-100 font-bold">{selected.symptomCategory || 'General Checkup'}</span>
+                        <span className="text-[#526857] block text-[10px]">Visit Category:</span>
+                        <span className="text-[#142618] font-bold">{selected.symptomCategory || 'General Checkup'}</span>
                       </div>
                       <div>
-                        <span className="text-slate-500 block text-[10px]">Symptom Location & Character:</span>
-                        <span className="text-slate-200">{selected.answers?.site || 'General'} • {selected.answers?.character || 'Routine Checkup'}</span>
+                        <span className="text-[#526857] block text-[10px]">Symptom Location & Character:</span>
+                        <span className="text-[#142618]">{selected.answers?.site || 'General'} • {selected.answers?.character || 'Routine Checkup'}</span>
                       </div>
                       <div>
-                        <span className="text-slate-500 block text-[10px]">Pain Rating & SpO2:</span>
-                        <span className="text-amber-400 font-bold">{selected.answers?.severity || 1}/10 Pain</span> | <span className="text-cyan-400 font-bold">SpO2 {selected.vitals?.spo2_percent || 98}%</span>
+                        <span className="text-[#526857] block text-[10px]">Pain Rating & SpO2:</span>
+                        <span className="text-amber-800 font-bold">{selected.answers?.severity || 1}/10 Pain</span> | <span className="text-[#2B8A1E] font-bold">SpO2 {selected.vitals?.spo2_percent || 98}%</span>
                       </div>
                     </div>
                   </div>
@@ -446,40 +446,40 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
 
               {/* CLINICAL DECISION TREE DIFFERENTIAL DIAGNOSIS CARD */}
               {selected.decisionTreeEval && (
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-rose-500/30 shadow-xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="p-5 rounded-2xl bg-white border border-[#E2DCBE] shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#E2DCBE] pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                      <span className="p-1.5 rounded-lg bg-rose-100 text-rose-700">
                         <Heart className="w-4 h-4" />
                       </span>
-                      <h4 className="font-extrabold text-sm text-slate-100">
+                      <h4 className="font-extrabold text-sm text-[#142618]">
                         Clinical Decision Tree & Differential Diagnosis Probability
                       </h4>
                     </div>
-                    <span className="text-xs text-rose-400 font-semibold">
+                    <span className="text-xs text-rose-700 font-bold">
                       {selected.decisionTreeEval.riskPercentage}% Ischemic Risk
                     </span>
                   </div>
 
                   <div className="space-y-2">
                     {selected.decisionTreeEval.differentials?.map((diff, i) => (
-                      <div key={i} className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-3 text-xs font-mono">
+                      <div key={i} className="p-3 rounded-xl bg-[#FFFDF1] border border-[#E2DCBE] flex items-center justify-between gap-3 text-xs font-mono">
                         <div>
-                          <span className="font-bold text-slate-200 block">{diff.name}</span>
-                          <span className="text-[10px] text-slate-400">Recommended Action: {diff.action}</span>
+                          <span className="font-bold text-[#142618] block">{diff.name}</span>
+                          <span className="text-[10px] text-[#526857]">Recommended Action: {diff.action}</span>
                         </div>
                         <div className="text-right">
-                          <span className={`font-bold text-sm ${diff.probability >= 50 ? 'text-rose-400' : diff.probability >= 25 ? 'text-amber-400' : 'text-teal-400'}`}>
+                          <span className={`font-bold text-sm ${diff.probability >= 50 ? 'text-rose-700' : diff.probability >= 25 ? 'text-amber-700' : 'text-[#2B8A1E]'}`}>
                             {diff.probability}%
                           </span>
-                          <span className="text-[10px] block text-slate-400">{diff.riskLevel}</span>
+                          <span className="text-[10px] block text-[#526857]">{diff.riskLevel}</span>
                         </div>
                       </div>
                     ))}
                   </div>
 
                   {selected.decisionTreeEval.recommendation && (
-                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-200 font-medium">
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 font-medium">
                       🩺 <strong>Physician Recommendation:</strong> {selected.decisionTreeEval.recommendation}
                     </div>
                   )}
@@ -488,29 +488,29 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
 
               {/* RAW PRESCRIPTION OCR TEXT VIEWER */}
               {showDocOcrText && (
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="p-4 rounded-xl bg-[#FFFDF1] border border-[#E2DCBE] space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-mono text-teal-400 font-bold">Scanned Document Raw OCR Stream</span>
-                    <span className="text-[10px] text-slate-500">Source: Uploaded PDF / Camera Snapshot</span>
+                    <span className="font-mono text-[#142618] font-bold">Scanned Document Raw OCR Stream</span>
+                    <span className="text-[10px] text-[#526857]">Source: Uploaded PDF / Camera Snapshot</span>
                   </div>
-                  <pre className="p-3 rounded-lg bg-slate-900 text-slate-300 font-mono text-[11px] max-h-48 overflow-y-auto border border-slate-800 whitespace-pre-wrap">
+                  <pre className="p-3 rounded-lg bg-white text-[#142618] font-mono text-[11px] max-h-48 overflow-y-auto border border-[#E2DCBE] whitespace-pre-wrap">
                     {selected.scannedDoc?.rawText || 'No raw text extracted from uploaded file.'}
                   </pre>
                 </div>
               )}
 
               {/* AI EXTRACTED EXECUTIVE HIGHLIGHTS CARD */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-teal-500/30 shadow-xl space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <div className="p-5 rounded-2xl bg-[#FFFDF1] border border-[#E2DCBE] shadow-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-[#E2DCBE] pb-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                    <span className="p-1.5 rounded-lg bg-[#59C749]/15 text-[#2B8A1E]">
                       <Sparkles className="w-4 h-4" />
                     </span>
-                    <h4 className="font-extrabold text-sm text-slate-100 tracking-tight">
+                    <h4 className="font-extrabold text-sm text-[#142618] tracking-tight">
                       AI Extracted Key Clinical Highlights (5-Second Review)
                     </h4>
                   </div>
-                  <span className="text-xs text-[#59C749] font-semibold">
+                  <span className="text-xs text-[#2B8A1E] font-bold">
                     Clinical Highlights
                   </span>
                 </div>
@@ -521,17 +521,17 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
                       key={idx}
                       className={`p-3 rounded-xl border flex items-start gap-3 text-xs ${
                         item.type === 'CRITICAL'
-                          ? 'bg-rose-500/10 border-rose-500/40 text-rose-200'
+                          ? 'bg-rose-50 border-rose-300 text-rose-950'
                           : item.type === 'WARNING' || item.type === 'ALERT'
-                          ? 'bg-amber-500/10 border-amber-500/40 text-amber-200'
-                          : 'bg-slate-900/60 border-slate-800 text-slate-300'
+                          ? 'bg-amber-50 border-amber-300 text-amber-950'
+                          : 'bg-white border-[#E2DCBE] text-[#142618]'
                       }`}
                     >
                       <div className="mt-0.5">
-                        {item.type === 'CRITICAL' && <ShieldAlert className="w-4 h-4 text-rose-400" />}
-                        {item.type === 'WARNING' && <AlertTriangle className="w-4 h-4 text-amber-400" />}
-                        {item.type === 'ALERT' && <AlertCircle className="w-4 h-4 text-amber-400" />}
-                        {item.type === 'NORMAL' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                        {item.type === 'CRITICAL' && <ShieldAlert className="w-4 h-4 text-rose-600" />}
+                        {item.type === 'WARNING' && <AlertTriangle className="w-4 h-4 text-amber-600" />}
+                        {item.type === 'ALERT' && <AlertCircle className="w-4 h-4 text-amber-600" />}
+                        {item.type === 'NORMAL' && <CheckCircle2 className="w-4 h-4 text-[#59C749]" />}
                       </div>
                       <div className="flex-1">
                         <span className="font-bold block">{item.title}</span>
@@ -543,26 +543,26 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
               </div>
 
               {/* Vitals Summary Card */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+              <div className="p-4 rounded-xl bg-[#FFFDF1] border border-[#E2DCBE]">
+                <h4 className="text-xs font-bold text-[#526857] uppercase tracking-wider mb-3">
                   Captured Vital Signs (Peripheral Hardware Sync)
                 </h4>
                 <div className="grid grid-cols-3 gap-3 font-mono text-center">
-                  <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-500 block">Temperature</span>
-                    <span className={`font-bold text-sm ${(selected.vitals?.temperature_c || 37.0) >= 38.5 ? 'text-rose-400' : 'text-amber-400'}`}>
+                  <div className="p-2.5 rounded-lg bg-white border border-[#E2DCBE]">
+                    <span className="text-[10px] text-[#526857] block">Temperature</span>
+                    <span className={`font-bold text-sm ${(selected.vitals?.temperature_c || 37.0) >= 38.5 ? 'text-rose-700' : 'text-amber-800'}`}>
                       {selected.vitals?.temperature_c || 37.0}°C
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-500 block">Oxygen (SpO2)</span>
-                    <span className={`font-bold text-sm ${(selected.vitals?.spo2_percent || 98) < 92 ? 'text-rose-400' : 'text-cyan-400'}`}>
+                  <div className="p-2.5 rounded-lg bg-white border border-[#E2DCBE]">
+                    <span className="text-[10px] text-[#526857] block">Oxygen (SpO2)</span>
+                    <span className={`font-bold text-sm ${(selected.vitals?.spo2_percent || 98) < 92 ? 'text-rose-700' : 'text-[#2B8A1E]'}`}>
                       {selected.vitals?.spo2_percent || 98}%
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-500 block">Heart Rate</span>
-                    <span className="font-bold text-sm text-rose-400">
+                  <div className="p-2.5 rounded-lg bg-white border border-[#E2DCBE]">
+                    <span className="text-[10px] text-[#526857] block">Heart Rate</span>
+                    <span className="font-bold text-sm text-rose-700">
                       {selected.vitals?.heart_rate_bpm || 72} BPM
                     </span>
                   </div>
@@ -570,20 +570,20 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
               </div>
 
               {/* Doctor Assessment Action Form */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              <div className="p-4 rounded-xl bg-[#FFFDF1] border border-[#E2DCBE] space-y-3">
+                <label className="text-xs font-bold text-[#526857] uppercase tracking-wider block">
                   Physician Assessment & Rx Notes
                 </label>
                 <textarea
                   value={doctorNotes}
                   onChange={(e) => setDoctorNotes(e.target.value)}
                   placeholder="Enter physician clinical observations, final diagnosis, or Rx prescription..."
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 focus:outline-none focus:border-teal-500 h-20"
+                  className="w-full bg-white border border-[#DED7BD] rounded-xl p-3 text-xs text-[#142618] focus:outline-none focus:border-[#59C749] focus:ring-1 focus:ring-[#59C749] h-20"
                 />
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={handleSaveAndSignOff}
-                    className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg hover:brightness-110 transition-all flex items-center gap-1.5"
+                    className="px-6 py-2.5 bg-[#59C749] hover:bg-[#4EBD3E] text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" /> Save & Sign Off Encounter
                   </button>
@@ -591,10 +591,10 @@ Status: OFFICIALLY SIGNED OFF BY OPD PHYSICIAN
               </div>
             </>
           ) : (
-            <div className="p-12 text-center text-slate-500 space-y-2">
-              <Stethoscope className="w-10 h-10 text-teal-400/40 mx-auto" />
-              <p className="text-sm font-bold text-slate-300">No Patient Selected in OPD Queue</p>
-              <p className="text-xs text-slate-500">Select a patient from the left queue or register new patients at the Kiosk.</p>
+            <div className="p-12 text-center text-[#526857] space-y-2">
+              <Stethoscope className="w-10 h-10 text-[#59C749]/40 mx-auto" />
+              <p className="text-sm font-bold text-[#142618]">No Patient Selected in OPD Queue</p>
+              <p className="text-xs text-[#526857]">Select a patient from the left queue or register new patients at the Kiosk.</p>
             </div>
           )}
         </div>

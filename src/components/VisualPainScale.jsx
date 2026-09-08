@@ -2,30 +2,30 @@ import React from 'react';
 import { Smile, Frown, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export default function VisualPainScale({ value, onChange, language = 'hi' }) {
+export default function VisualPainScale({ value, onChange, language = 'en' }) {
   const { t } = useTranslation();
 
   const painLevels = [
-    { level: 0, emoji: '😃', labelKey: 'painScale.ratings.0', color: 'border-emerald-500 bg-emerald-500/10 text-emerald-400' },
-    { level: 2, emoji: '😊', labelKey: 'painScale.ratings.2', color: 'border-emerald-400 bg-emerald-400/10 text-emerald-300' },
-    { level: 4, emoji: '😐', labelKey: 'painScale.ratings.4', color: 'border-amber-400 bg-amber-400/10 text-amber-300' },
-    { level: 6, emoji: '😣', labelKey: 'painScale.ratings.6', color: 'border-orange-500 bg-orange-500/10 text-orange-300' },
-    { level: 8, emoji: '😫', labelKey: 'painScale.ratings.8', color: 'border-rose-500 bg-rose-500/10 text-rose-300' },
-    { level: 10, emoji: '🤬', labelKey: 'painScale.ratings.10', color: 'border-red-600 bg-red-600/20 text-rose-400 animate-pulse' }
+    { level: 0, emoji: '😃', labelKey: 'painScale.ratings.0' },
+    { level: 2, emoji: '😊', labelKey: 'painScale.ratings.2' },
+    { level: 4, emoji: '😐', labelKey: 'painScale.ratings.4' },
+    { level: 6, emoji: '😣', labelKey: 'painScale.ratings.6' },
+    { level: 8, emoji: '😫', labelKey: 'painScale.ratings.8' },
+    { level: 10, emoji: '🤬', labelKey: 'painScale.ratings.10' }
   ];
 
   return (
-    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div className="bg-white border border-[#E2DCBE] rounded-2xl p-5 shadow-xs space-y-4">
+      <div className="flex items-center justify-between border-b border-[#E2DCBE] pb-3">
         <div>
-          <h4 className="font-bold text-sm text-slate-100 flex items-center gap-2">
+          <h4 className="font-bold text-sm text-[#142618] flex items-center gap-2">
             {t('painScale.title')}
           </h4>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#526857]">
             {t('painScale.subtitle')}
           </p>
         </div>
-        <span className="font-mono text-sm font-extrabold text-teal-400 px-3 py-1 bg-teal-500/10 border border-teal-500/30 rounded-xl">
+        <span className="font-mono text-sm font-bold text-[#142618] px-3 py-1 bg-[#59C749]/15 border border-[#59C749]/30 rounded-xl">
           {t('painScale.selected')}: {value} / 10
         </span>
       </div>
@@ -40,17 +40,17 @@ export default function VisualPainScale({ value, onChange, language = 'hi' }) {
               onClick={() => onChange(p.level)}
               className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-between h-32 cursor-pointer ${
                 isSelected
-                  ? `border-2 shadow-xl ${p.color} scale-105 z-10`
-                  : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700 text-slate-400'
+                  ? 'border-2 border-[#59C749] bg-[#59C749]/15 shadow-sm scale-105 z-10 text-[#142618]'
+                  : 'bg-[#FFFDF1] border-[#E2DCBE] hover:border-[#59C749]/50 text-[#526857]'
               }`}
             >
               <span className="text-3xl my-1 select-none">{p.emoji}</span>
               <div>
-                <span className="font-bold text-xs block text-slate-200">
+                <span className="font-bold text-xs block text-[#142618]">
                   {t(p.labelKey)}
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-slate-500 mt-1">
+              <span className="text-[10px] font-mono font-bold text-[#526857] mt-1">
                 Level {p.level}
               </span>
             </button>
@@ -67,7 +67,7 @@ export default function VisualPainScale({ value, onChange, language = 'hi' }) {
           step="1"
           value={value}
           onChange={(e) => onChange(parseInt(e.target.value, 10))}
-          className="w-full h-3 bg-gradient-to-r from-emerald-500 via-amber-400 via-orange-500 to-rose-600 rounded-lg cursor-pointer accent-teal-400 shadow-inner"
+          className="w-full h-3 bg-gradient-to-r from-[#59C749] via-amber-400 to-rose-600 rounded-lg cursor-pointer accent-[#59C749] shadow-inner"
         />
       </div>
     </div>
