@@ -7,6 +7,7 @@ import DoctorDashboard from './components/DoctorDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import HardwareSimulator from './components/HardwareSimulator';
 import { hardwareAdapter } from './services/hardwareAdapter';
+import i18n from './i18n.js';
 
 export default function App() {
   const [activeRole, setActiveRole] = useState('login'); // First page default is 'login'!
@@ -15,6 +16,11 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState({ name: 'Rajesh Verma', role: 'Patient' });
   const [language, setLanguage] = useState('en');
   const [isHardwareModalOpen, setIsHardwareModalOpen] = useState(false);
+
+  // Sync i18n language whenever the dropdown changes
+  useEffect(() => {
+    i18n.changeLanguage(language);
+  }, [language]);
 
   // Doctor Availability & OPD Session State
   const [isDoctorAvailable, setIsDoctorAvailable] = useState(true);
@@ -111,7 +117,7 @@ export default function App() {
       {/* Main Content Router View */}
       <main className="flex-1 pb-12 pt-4">
         {activeRole === 'login' ? (
-          <LoginPage onLogin={handleLogin} />
+          <LoginPage onLogin={handleLogin} language={language} />
         ) : activeRole === 'patient' ? (
           patientSubView === 'dashboard' ? (
             <PatientDashboard

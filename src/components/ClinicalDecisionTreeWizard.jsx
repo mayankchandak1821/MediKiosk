@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Heart, ShieldAlert, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, 
   Sparkles, Activity, Wind, Flame, User, RefreshCw, Zap, Stethoscope
 } from 'lucide-react';
-import { DECISION_TREES, decisionTreeEngine } from '../services/decisionTreeEngine';
+import { useTranslation } from 'react-i18next';
+import { DECISION_TREES, decisionTreeEngine, getOptionLabel, getStepTitle, getStepSubtitle } from '../services/decisionTreeEngine';
 
 export default function ClinicalDecisionTreeWizard({ 
   category = 'chest_pain', 
   vitals = {}, 
   treeAnswers = {}, 
   onTreeAnswersChange, 
-  onCompleteTree 
+  onCompleteTree,
+  language = 'hi'
 }) {
+  const { t, i18n } = useTranslation();
+  const activeLang = i18n.language || language || 'en';
+  const isHindi = activeLang === 'hi';
   const treeConfig = DECISION_TREES[category] || DECISION_TREES.chest_pain;
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
 
@@ -68,14 +73,14 @@ export default function ClinicalDecisionTreeWizard({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-extrabold text-slate-100 text-base">
-                Clinical Decision Tree: {treeConfig.name}
+                {isHindi ? `αñ¿αÑêαñªαñ╛αñ¿αñ┐αñò αñ¿αñ┐αñ░αÑìαñúαñ» αñ╡αÑâαñòαÑìαñ╖: ${treeConfig.name_hi || treeConfig.name}` : `Clinical Decision Tree: ${treeConfig.name}`}
               </h3>
               <span className="px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-300 font-mono text-xs font-bold border border-teal-500/30">
-                DYNAMIC BRANCHING
+                {isHindi ? 'αñíαñ╛αñ»αñ¿αñ╛αñ«αñ┐αñò αñ╢αñ╛αñûαñ╛αñÅαñé' : 'DYNAMIC BRANCHING'}
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Interactive clinical decision tree evaluating ischemic patterns & red flags
+              {isHindi ? 'αñ▓αñòαÑìαñ╖αñúαÑïαñé αñÅαñ╡αñé αñåαñ¬αñ╛αññαñòαñ╛αñ▓αÑÇαñ¿ αñÜαÑçαññαñ╛αñ╡αñ¿αÑÇ αñòαñ╛ αñ«αÑéαñ▓αÑìαñ»αñ╛αñéαñòαñ¿ αñòαñ░αñ¿αÑç αñ╡αñ╛αñ▓αñ╛ αñçαñéαñƒαñ░αÑêαñòαÑìαñƒαñ┐αñ╡ αñ¿αñ┐αñ░αÑìαñúαñ» αñ╡αÑâαñòαÑìαñ╖' : 'Interactive clinical decision tree evaluating ischemic patterns & red flags'}
             </p>
           </div>
         </div>
@@ -93,11 +98,11 @@ export default function ClinicalDecisionTreeWizard({
                   ? 'w-5 bg-teal-500/50'
                   : 'w-4 bg-slate-800'
               }`}
-              title={`Step ${idx + 1}: ${s.title}`}
+              title={`${isHindi ? 'αñÜαñ░αñú' : 'Step'} ${idx + 1}: ${isHindi ? (s.title_hi || s.title) : s.title}`}
             />
           ))}
           <span className="text-xs font-mono text-slate-400 ml-2 font-bold">
-            Step {currentStepIdx + 1} of {totalSteps}
+            {isHindi ? `αñÜαñ░αñú ${currentStepIdx + 1} αñòαÑüαñ▓ ${totalSteps} αñ«αÑçαñé αñ╕αÑç` : `Step ${currentStepIdx + 1} of ${totalSteps}`}
           </span>
         </div>
       </div>
@@ -108,10 +113,12 @@ export default function ClinicalDecisionTreeWizard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 font-black text-rose-400 text-sm uppercase">
               <ShieldAlert className="w-5 h-5 text-rose-400" />
-              CRITICAL ISCHEMIC RED FLAG DETECTED ({evaluation.riskPercentage}% CARDIAC RISK)
+              {isHindi 
+                ? `≡ƒÜ¿ αñùαñéαñ¡αÑÇαñ░ αñåαñ¬αñ╛αññαñòαñ╛αñ▓αÑÇαñ¿ αñÜαÑçαññαñ╛αñ╡αñ¿αÑÇ αñªαñ░αÑìαñ£ (${evaluation.riskPercentage}% αñ╣αÑâαñªαñ» αñ£αÑïαñûαñ┐αñ«)`
+                : `CRITICAL ISCHEMIC RED FLAG DETECTED (${evaluation.riskPercentage}% CARDIAC RISK)`}
             </div>
             <span className="px-2.5 py-0.5 rounded bg-rose-500 text-slate-950 font-black text-[10px] uppercase">
-              PRIORITY TRIAGE
+              {isHindi ? 'αñåαñ¬αñ╛αññαñòαñ╛αñ▓αÑÇαñ¿ αñ¬αÑìαñ░αñ╛αñÑαñ«αñ┐αñòαññαñ╛' : 'PRIORITY TRIAGE'}
             </span>
           </div>
           <p className="text-xs text-rose-200/90 font-medium">
@@ -120,7 +127,7 @@ export default function ClinicalDecisionTreeWizard({
           <div className="flex flex-wrap gap-1.5 pt-1">
             {evaluation.redFlags.map((flag, i) => (
               <span key={i} className="px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-[10px] font-mono font-bold text-rose-300">
-                🚨 {flag}
+                ≡ƒÜ¿ {flag}
               </span>
             ))}
           </div>
@@ -132,10 +139,14 @@ export default function ClinicalDecisionTreeWizard({
         <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5 shadow-xl">
           <div>
             <span className="text-[11px] font-bold font-mono text-teal-400 uppercase tracking-widest block mb-1">
-              DECISION TREE STEP {currentStepIdx + 1} / {totalSteps}
+              {isHindi ? `αñ¿αñ┐αñ░αÑìαñúαñ» αñ╡αÑâαñòαÑìαñ╖ αñÜαñ░αñú ${currentStepIdx + 1} / ${totalSteps}` : `DECISION TREE STEP ${currentStepIdx + 1} / ${totalSteps}`}
             </span>
-            <h4 className="font-extrabold text-slate-100 text-base">{currentStep.title}</h4>
-            <p className="text-xs text-slate-400 mt-0.5">{currentStep.subtitle}</p>
+            <h4 className="font-extrabold text-slate-100 text-base">
+              {getStepTitle(currentStep, activeLang)}
+            </h4>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {getStepSubtitle(currentStep, activeLang)}
+            </p>
           </div>
 
           {/* Options Grid */}
@@ -149,7 +160,7 @@ export default function ClinicalDecisionTreeWizard({
                 <button
                   key={opt.id}
                   onClick={() => handleSelectOption(opt.id, currentStep.isMultiSelect)}
-                  className={`w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 ${
+                  className={`w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
                     isSelected
                       ? opt.isRedFlag
                         ? 'bg-rose-500/20 border-rose-400 text-rose-200 font-bold shadow-lg shadow-rose-500/10'
@@ -172,12 +183,14 @@ export default function ClinicalDecisionTreeWizard({
                       {opt.icon === 'User' && <User className="w-4 h-4" />}
                       {(!opt.icon || opt.icon === 'CheckCircle2') && <CheckCircle2 className="w-4 h-4" />}
                     </span>
-                    <span className="text-xs font-semibold">{opt.label}</span>
+                    <span className="text-xs font-semibold">
+                      {getOptionLabel(opt, activeLang)}
+                    </span>
                   </div>
 
                   {opt.isRedFlag && (
                     <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[9px] font-mono font-bold shrink-0">
-                      RED FLAG
+                      {isHindi ? 'αñûαññαñ░αÑç αñòαÑÇ αñÜαÑçαññαñ╛αñ╡αñ¿αÑÇ' : 'RED FLAG'}
                     </span>
                   )}
                 </button>
@@ -190,25 +203,27 @@ export default function ClinicalDecisionTreeWizard({
             <button
               onClick={handlePrevStep}
               disabled={currentStepIdx === 0}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all border ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all border cursor-pointer ${
                 currentStepIdx === 0
                   ? 'bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed'
                   : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
               }`}
             >
-              <ChevronLeft className="w-4 h-4" /> Previous Step
+              <ChevronLeft className="w-4 h-4" /> {t('decisionTree.prevStep')}
             </button>
 
             <button
               onClick={handleNextStep}
               disabled={!isStepAnswered()}
-              className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl font-bold text-xs transition-all ${
+              className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                 isStepAnswered()
                   ? 'bg-gradient-to-r from-teal-400 to-cyan-400 text-slate-950 shadow-lg hover:brightness-110'
                   : 'bg-slate-800 text-slate-500 cursor-not-allowed'
               }`}
             >
-              {currentStepIdx === totalSteps - 1 ? 'Complete Decision Tree' : 'Next Step'}
+              {currentStepIdx === totalSteps - 1 
+                ? t('decisionTree.finishTree') 
+                : t('decisionTree.nextStep')}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -222,11 +237,11 @@ export default function ClinicalDecisionTreeWizard({
                 <Stethoscope className="w-4 h-4" />
               </span>
               <h4 className="font-extrabold text-sm text-slate-100">
-                Clinical Differential Diagnosis
+                {isHindi ? 'αñ¿αÑêαñªαñ╛αñ¿αñ┐αñò αñ╡αñ┐αñ¡αÑçαñªαñò αñ¿αñ┐αñªαñ╛αñ¿' : 'Clinical Differential Diagnosis'}
               </h4>
             </div>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/10 border border-teal-500/30 text-teal-300 font-bold">
-              REALTIME AI PATHWAYS
+              {isHindi ? 'αñÅαñåαñê αñ╡αñ┐αñ╢αÑìαñ▓αÑçαñ╖αñú' : 'REALTIME AI PATHWAYS'}
             </span>
           </div>
 
@@ -258,7 +273,7 @@ export default function ClinicalDecisionTreeWizard({
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1">
-                  <span>Action: {diff.action}</span>
+                  <span>{isHindi ? 'αñòαñ╛αñ░αÑìαñ░αñ╡αñ╛αñê:' : 'Action:'} {diff.action}</span>
                   <span className="font-bold text-slate-300">{diff.riskLevel}</span>
                 </div>
               </div>
@@ -266,9 +281,13 @@ export default function ClinicalDecisionTreeWizard({
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-400 space-y-1">
-            <span className="font-bold text-teal-300 block">AI Triage Summary</span>
+            <span className="font-bold text-teal-300 block">
+              {isHindi ? 'αñÅαñåαñê αñƒαÑìαñ░αñ╛αñçαñÅαñ£ αñ╕αñ╛αñ░αñ╛αñéαñ╢' : 'AI Triage Summary'}
+            </span>
             <p className="text-[11px] leading-relaxed">
-              Selected options trigger clinical decision pathways based on ACC/AHA guidelines for chest pain evaluation.
+              {isHindi 
+                ? 'αñÜαñ»αñ¿αñ┐αññ αñ╡αñ┐αñòαñ▓αÑìαñ¬ αñÅαñ╕αÑÇαñ╕αÑÇ/αñÅαñÅαñÜαñÅ αñªαñ┐αñ╢αñ╛αñ¿αñ┐αñ░αÑìαñªαÑçαñ╢αÑïαñé αñòαÑç αñåαñºαñ╛αñ░ αñ¬αñ░ αñ¿αÑêαñªαñ╛αñ¿αñ┐αñò αñ¿αñ┐αñ░αÑìαñúαñ» αñòαñ╛ αñ«αÑéαñ▓αÑìαñ»αñ╛αñéαñòαñ¿ αñòαñ░αññαÑç αñ╣αÑêαñéαÑñ'
+                : 'Selected options trigger clinical decision pathways based on ACC/AHA guidelines for chest pain evaluation.'}
             </p>
           </div>
         </div>

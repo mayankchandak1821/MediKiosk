@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   User, Mic, MicOff, Volume2, FileText, CheckCircle2, AlertTriangle, 
   ChevronRight, Heart, Brain, Wind, Activity, Feather, Upload, ShieldCheck, 
@@ -15,6 +15,7 @@ import ClinicalDecisionTreeWizard from './ClinicalDecisionTreeWizard';
 import { decisionTreeEngine } from '../services/decisionTreeEngine';
 
 export default function KioskIntake({ currentVitals, onEncounterSubmit, language, isDoctorAvailable = true, opdSessionNumber = 1, initialStep = 2 }) {
+  const isHindi = language === 'hi';
   // Step State: 1 = Patient Auth / Sign Up, 2 = Multimodal Voice & Touch Intake, 3 = Medical Document OCR, 4 = Review & Submit
   const [step, setStep] = useState(initialStep);
 
@@ -171,11 +172,11 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
         setVoiceTranscript(transcriptStr);
 
         const lower = transcriptStr.toLowerCase();
-        if (lower.includes('routine') || lower.includes('checkup') || lower.includes('सामान्य')) {
+        if (lower.includes('routine') || lower.includes('checkup') || lower.includes('αñ╕αñ╛αñ«αñ╛αñ¿αÑìαñ»')) {
           applyRoutineCheckupDefaults();
-        } else if (lower.includes('chest') || lower.includes('heart') || lower.includes('सीने')) {
+        } else if (lower.includes('chest') || lower.includes('heart') || lower.includes('αñ╕αÑÇαñ¿αÑç')) {
           handleCategorySelect('chest_pain');
-        } else if (lower.includes('fever') || lower.includes('बुखार')) {
+        } else if (lower.includes('fever') || lower.includes('αñ¼αÑüαñûαñ╛αñ░')) {
           handleCategorySelect('fever');
         }
       };
@@ -259,12 +260,14 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             </span>
             <div>
               <h2 className="font-bold text-slate-100 text-sm">
-                {step === 1 && 'Step 1: Patient Sign Up & ABHA Authentication'}
-                {step === 2 && 'Step 2: Pictorial Intake & Clinical Questionnaire'}
-                {step === 3 && 'Step 3: Medical Document OCR Scanner'}
-                {step === 4 && 'Step 4: Final OPD Review & Doctor Routing'}
+                {step === 1 && (isHindi ? 'αñÜαñ░αñú 1: αñ«αñ░αÑÇαñ£αñ╝ αñ¬αñéαñ£αÑÇαñòαñ░αñú αñÅαñ╡αñé αñåαñ¡αñ╛ αñ╕αññαÑìαñ»αñ╛αñ¬αñ¿' : 'Step 1: Patient Sign Up & ABHA Authentication')}
+                {step === 2 && (isHindi ? 'αñÜαñ░αñú 2: αñÜαñ┐αññαÑìαñ░αñ╛αññαÑìαñ«αñò αñ▓αñòαÑìαñ╖αñú αñÜαñ»αñ¿ αñÅαñ╡αñé αñ¿αÑêαñªαñ╛αñ¿αñ┐αñò αñ¬αÑìαñ░αñ╢αÑìαñ¿αÑïαññαÑìαññαñ░αÑÇ' : 'Step 2: Pictorial Intake & Clinical Questionnaire')}
+                {step === 3 && (isHindi ? 'αñÜαñ░αñú 3: αñ¬αñ░αÑìαñÜαñ╛ αñÅαñ╡αñé αñ▓αÑêαñ¼ αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ αñ╕αÑìαñòαÑêαñ¿αñ░' : 'Step 3: Medical Document OCR Scanner')}
+                {step === 4 && (isHindi ? 'αñÜαñ░αñú 4: αñôαñ¬αÑÇαñíαÑÇ αñ╕αñ«αÑÇαñòαÑìαñ╖αñ╛ αñÅαñ╡αñé αñíαÑëαñòαÑìαñƒαñ░ αñ¬αÑìαñ░αÑçαñ╖αñú' : 'Step 4: Final OPD Review & Doctor Routing')}
               </h2>
-              <p className="text-xs text-slate-400">Self-service digital intake kiosk for Primary Health Centers & Hospital OPDs</p>
+              <p className="text-xs text-slate-400">
+                {isHindi ? 'αñ¬αÑìαñ░αñ╛αñÑαñ«αñ┐αñò αñ╕αÑìαñ╡αñ╛αñ╕αÑìαñÑαÑìαñ» αñòαÑçαñéαñªαÑìαñ░ αñÅαñ╡αñé αñàαñ╕αÑìαñ¬αññαñ╛αñ▓ αñôαñ¬αÑÇαñíαÑÇ αñ╣αÑçαññαÑü αñíαñ┐αñ£αñ┐αñƒαñ▓ αñòαñ┐αñ»αÑïαñ╕αÑìαñò' : 'Self-service digital intake kiosk for Primary Health Centers & Hospital OPDs'}
+              </p>
             </div>
           </div>
 
@@ -394,7 +397,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                           : 'bg-slate-950 border-slate-800 text-slate-400'
                       }`}
                     >
-                      🏥 Allopathy (Modern Medicine)
+                      ≡ƒÅÑ Allopathy (Modern Medicine)
                     </button>
                     <button
                       onClick={() => setCareMode('ayush')}
@@ -404,7 +407,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                           : 'bg-slate-950 border-slate-800 text-slate-400'
                       }`}
                     >
-                      🌿 AYUSH (Ayurveda OPD)
+                      ≡ƒî┐ AYUSH (Ayurveda OPD)
                     </button>
                   </div>
                 </div>
@@ -507,11 +510,11 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-100 focus:border-teal-500 focus:outline-none"
                   >
                     <option value="en">English</option>
-                    <option value="hi">हिंदी (Hindi)</option>
-                    <option value="ta">தமிழ் (Tamil)</option>
-                    <option value="te">తెలుగు (Telugu)</option>
-                    <option value="mr">मराठी (Marathi)</option>
-                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="hi">αñ╣αñ┐αñéαñªαÑÇ (Hindi)</option>
+                    <option value="ta">α«ñα««α«┐α«┤α»ì (Tamil)</option>
+                    <option value="te">α░ñα▒åα░▓α▒üα░ùα▒ü (Telugu)</option>
+                    <option value="mr">αñ«αñ░αñ╛αñáαÑÇ (Marathi)</option>
+                    <option value="bn">αª¼αª╛αªéαª▓αª╛ (Bengali)</option>
                   </select>
                 </div>
               </div>
@@ -693,6 +696,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
             vitals={currentVitals}
             treeAnswers={treeAnswers}
             onTreeAnswersChange={(updatedTreeAnswers) => setTreeAnswers(updatedTreeAnswers)}
+            language={language || 'hi'}
           />
 
           {/* Vitals Telemetry Gauges with Live Triage Risk Score */}
@@ -767,12 +771,12 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                 {[
-                  { id: 'shortness_of_breath', label: '🫁 Shortness of Breath' },
-                  { id: 'cold_sweats', label: '💦 Cold Sweats' },
-                  { id: 'nausea_dizziness', label: '🤢 Nausea / Dizziness' },
-                  { id: 'fever_chills', label: '🌡️ Fever / Chills' },
-                  { id: 'fatigue', label: '😴 Muscle Fatigue' },
-                  { id: 'cough', label: '🗣️ Dry Cough' }
+                  { id: 'shortness_of_breath', label: '≡ƒ½ü Shortness of Breath' },
+                  { id: 'cold_sweats', label: '≡ƒÆª Cold Sweats' },
+                  { id: 'nausea_dizziness', label: '≡ƒñó Nausea / Dizziness' },
+                  { id: 'fever_chills', label: '≡ƒîí∩╕Å Fever / Chills' },
+                  { id: 'fatigue', label: '≡ƒÿ┤ Muscle Fatigue' },
+                  { id: 'cough', label: '≡ƒùú∩╕Å Dry Cough' }
                 ].map(assoc => {
                   const isSelected = answers.associations?.includes(assoc.id);
                   return (
@@ -860,7 +864,7 @@ export default function KioskIntake({ currentVitals, onEncounterSubmit, language
                 <p className="text-xs text-slate-400">{patient.age} Yrs | {patient.gender}</p>
               </div>
               <div className="pt-2 border-t border-slate-800 space-y-1 font-mono text-xs">
-                <p className="text-amber-400">Temperature: {currentVitals.temperature_c}°C</p>
+                <p className="text-amber-400">Temperature: {currentVitals.temperature_c}┬░C</p>
                 <p className="text-cyan-400">SpO2: {currentVitals.spo2_percent}%</p>
                 <p className="text-rose-400">Heart Rate: {currentVitals.heart_rate_bpm} BPM</p>
               </div>

@@ -1,0 +1,141 @@
+{
+  "app": {
+    "title": "MediKiosk Telehealth System",
+    "patientPortal": "Patient Portal",
+    "doctorPortal": "Doctor OPD Portal",
+    "adminPortal": "Hospital Admin Dashboard",
+    "logout": "Logout",
+    "language": "Language",
+    "english": "English",
+    "hindi": "Hindi (हिंदी)"
+  },
+  "login": {
+    "title": "MediKiosk Access Portal",
+    "subtitle": "Select your operational interface to proceed into the triage workstation",
+    "patient": {
+      "title": "Patient Kiosk Portal",
+      "subtitle": "Self-service symptom intake, body map locator & instant vital triage"
+    },
+    "doctor": {
+      "title": "Doctor OPD Portal",
+      "subtitle": "Real-time EHR review, triage queue management & consultation notes"
+    },
+    "admin": {
+      "title": "Hospital Admin Dashboard",
+      "subtitle": "Kiosk network health, resource allocation & analytics overview"
+    },
+    "enterDetails": "Enter Credentials for",
+    "usernameLabel": "Username or ID",
+    "usernamePlaceholder": "Enter username or patient ID",
+    "passwordLabel": "Access Code / Password",
+    "passwordPlaceholder": "Enter your security password",
+    "submitBtn": "Sign In to Portal",
+    "quickDemo": "Quick Demo Access",
+    "patientRole": "Patient Mode",
+    "doctorRole": "Doctor Mode",
+    "adminRole": "Admin Mode"
+  },
+  "header": {
+    "title": "MediKiosk Portal",
+    "badge": "AI Clinical Triage System",
+    "logout": "Exit Portal"
+  },
+  "bodyMap": {
+    "title": "Anatomical Pain & Symptom Locator",
+    "subtitle": "Click on any zone or camera preset to highlight your exact area of pain",
+    "views": {
+      "front": "Front View",
+      "back": "Back View",
+      "reset": "Reset Zoom"
+    },
+    "zones": {
+      "head_forehead": {
+        "label": "Head & Forehead",
+        "subtext": "Headache, dizziness, sinus pain, fever"
+      },
+      "throat_neck": {
+        "label": "Throat & Neck",
+        "subtext": "Sore throat, difficulty swallowing, stiffness"
+      },
+      "chest_center": {
+        "label": "Center Chest (Cardiac/Sternum)",
+        "subtext": "Pressure, tightness, angina, palpitation"
+      },
+      "chest_left": {
+        "label": "Left Chest & Shoulder",
+        "subtext": "Radiating pain, left arm tightness"
+      },
+      "chest_right": {
+        "label": "Right Chest & Lungs",
+        "subtext": "Pleuritic pain, sharp breath pain"
+      },
+      "abdomen_upper": {
+        "label": "Upper Abdomen / Epigastric",
+        "subtext": "Acidity, heartburn, stomach pain, nausea"
+      },
+      "abdomen_lower": {
+        "label": "Lower Abdomen & Pelvis",
+        "subtext": "Cramps, sharp pelvic distress, bowel pain"
+      },
+      "joints_limbs": {
+        "label": "Joints & Limbs",
+        "subtext": "Joint swelling, arm/leg pain, stiffness"
+      },
+      "back_lumbar": {
+        "label": "Back & Lumbar Spine",
+        "subtext": "Lower back strain, spinal pain, flank ache"
+      }
+    }
+  },
+  "painScale": {
+    "title": "Wong-Baker FACES® Pain Scale",
+    "subtitle": "Select the facial expression or number (0 - 10) that best matches your pain",
+    "selected": "Selected Pain Rating",
+    "ratings": {
+      "0": "No Hurt",
+      "2": "Hurts Little Bit",
+      "4": "Hurts Little More",
+      "6": "Hurts Even More",
+      "8": "Hurts Whole Lot",
+      "10": "Hurts Worst"
+    }
+  },
+  "decisionTree": {
+    "title": "Clinical Decision Tree Assessment",
+    "selectedCategory": "Active Assessment",
+    "step": "Step {{current}} of {{total}}",
+    "prevStep": "Previous Step",
+    "nextStep": "Next Step",
+    "finishTree": "Complete Decision Tree",
+    "redFlagsAlert": "EMERGENCY WARNING DETECTED",
+    "seekImmediateCare": "Immediate medical attention required based on your reported symptoms.",
+    "completeTitle": "Assessment Completed",
+    "completeSubtitle": "Clinical data logged into your EHR triage report",
+    "reset": "Start New Assessment"
+  },
+  "scanner": {
+    "title": "Medical Document Scanner & OCR",
+    "subtitle": "Upload or scan previous prescriptions, lab reports, or medical records",
+    "uploadBtn": "Upload Medical File (PDF / Image)",
+    "processing": "Processing document with Tesseract OCR...",
+    "cameraBtn": "Scan via Kiosk Camera",
+    "cameraActive": "Camera Active - Position document in frame",
+    "captureBtn": "Capture Document Frame",
+    "resultsTitle": "Extracted Clinical Text & Structured Key Metrics",
+    "noText": "No text extracted yet. Upload or scan a prescription."
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "patientId": "Patient ID",
+    "vitalsTitle": "Real-time Telemetry Vitals",
+    "temp": "Body Temperature",
+    "hr": "Heart Rate",
+    "spo2": "Blood Oxygen (SpO2)",
+    "tabs": {
+      "intake": "Self-Intake Triage",
+      "vitals": "Vitals Telemetry",
+      "history": "Medical History",
+      "scanner": "Document OCR Scanner"
+    }
+  }
+}

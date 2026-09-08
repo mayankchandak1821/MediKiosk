@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Activity, Stethoscope, Globe, ShieldCheck, Sliders, User, LogOut, Key } from 'lucide-react';
 
 export default function Header({ 
@@ -12,11 +12,11 @@ export default function Header({
 }) {
   const languages = [
     { code: 'en', name: 'English' },
-    { code: 'hi', name: 'हिन्दी (Hindi)' },
-    { code: 'ta', name: 'தமிழ் (Tamil)' },
-    { code: 'te', name: 'తెలుగు (Telugu)' },
-    { code: 'mr', name: 'मরাठी (Marathi)' },
-    { code: 'bn', name: 'বাংলা (Bengali)' }
+    { code: 'hi', name: 'αñ╣αñ┐αñ¿αÑìαñªαÑÇ (Hindi)' },
+    { code: 'ta', name: 'α«ñα««α«┐α«┤α»ì (Tamil)' },
+    { code: 'te', name: 'α░ñα▒åα░▓α▒üα░ùα▒ü (Telugu)' },
+    { code: 'mr', name: 'αñ«αª░αª╛αñáαÑÇ (Marathi)' },
+    { code: 'bn', name: 'αª¼αª╛αªéαª▓αª╛ (Bengali)' }
   ];
 
   const getRoleBadge = () => {
@@ -71,13 +71,13 @@ export default function Header({
         {/* Quick Vitals Readout */}
         <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-slate-950/80 border border-slate-800 text-xs font-mono">
           <span className="text-rose-400 flex items-center gap-1">
-            ❤️ {currentVitals.heart_rate_bpm} <span className="text-[10px] text-slate-500">BPM</span>
+            Γ¥ñ∩╕Å {currentVitals.heart_rate_bpm} <span className="text-[10px] text-slate-500">BPM</span>
           </span>
           <span className="text-cyan-400 flex items-center gap-1">
-            🫁 {currentVitals.spo2_percent}% <span className="text-[10px] text-slate-500">SpO2</span>
+            ≡ƒ½ü {currentVitals.spo2_percent}% <span className="text-[10px] text-slate-500">SpO2</span>
           </span>
           <span className="text-amber-400 flex items-center gap-1">
-            🌡️ {currentVitals.temperature_c}°C <span className="text-[10px] text-slate-500">Temp</span>
+            ≡ƒîí∩╕Å {currentVitals.temperature_c}┬░C <span className="text-[10px] text-slate-500">Temp</span>
           </span>
         </div>
 
@@ -96,7 +96,13 @@ export default function Header({
           <Globe className="w-3.5 h-3.5 text-teal-400" />
           <select
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={(e) => {
+              const newLang = e.target.value;
+              setLanguage(newLang);
+              import('i18next').then(i18nModule => {
+                i18nModule.default.changeLanguage(newLang);
+              });
+            }}
             className="bg-transparent text-slate-200 font-medium focus:outline-none cursor-pointer"
           >
             {languages.map((l) => (

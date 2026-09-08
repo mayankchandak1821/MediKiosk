@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Heart, Brain, Activity, User, ShieldAlert, Sparkles, AlertCircle, ZoomIn, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCategory }) {
+export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCategory, language = 'hi' }) {
+  const { t } = useTranslation();
   const [viewAngle, setViewAngle] = useState('front'); // 'front' | 'back'
 
   const bodyZones = [
     {
       id: 'head_forehead',
       label: 'Head & Brain',
+      label_hi: 'αñ╕αñ┐αñ░ αñÅαñ╡αñé αñ«αñ╕αÑìαññαñ┐αñ╖αÑìαñò',
       subtext: 'Headache, Dizziness, Migraine',
+      subtext_hi: 'αñ╕αñ┐αñ░αñªαñ░αÑìαñª, αñÜαñòαÑìαñòαñ░ αñåαñ¿αñ╛, αñ«αñ╛αñçαñùαÑìαñ░αÑçαñ¿',
       category: 'headache',
       x: 50, y: 12,
       zoomClass: 'scale-[1.8] translate-y-[22%]',
@@ -18,7 +22,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'throat_neck',
       label: 'Throat & Neck',
+      label_hi: 'αñùαñ▓αñ╛ αñÅαñ╡αñé αñùαñ░αÑìαñªαñ¿',
       subtext: 'Sore throat, Thyroid, Cervical',
+      subtext_hi: 'αñùαñ▓αÑç αñ«αÑçαñé αñûαñ░αñ╛αñ╢, αñÑαñ╛αñ»αñ░αñ╛αñçαñí, αñÑαñòαñ╛αñ╡αñƒ',
       category: 'respiratory',
       x: 50, y: 22,
       zoomClass: 'scale-[1.7] translate-y-[14%]',
@@ -28,7 +34,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'chest_center',
       label: 'Center of Chest / Heart',
+      label_hi: 'αñ╕αÑÇαñ¿αÑç αñòαñ╛ αñ«αñºαÑìαñ» αñ¡αñ╛αñù / αñ╣αÑâαñªαñ»',
       subtext: 'Pressure, Squeezing, Cardiac',
+      subtext_hi: 'αñªαñ¼αñ╛αñ╡, αñ£αñòαñíαñ╝αñ¿, αñ╣αÑâαñªαñ» αñ╕αñéαñ¼αñéαñºαÑÇ',
       category: 'chest_pain',
       x: 50, y: 34,
       zoomClass: 'scale-[1.75] translate-y-[2%]',
@@ -39,7 +47,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'chest_left',
       label: 'Left Chest & Arm',
+      label_hi: 'αñ¼αñ╛αñ»αñ╛αñé αñ╕αÑÇαñ¿αñ╛ αñÅαñ╡αñé αñ¼αñ╛αñ»αñ╛αñé αñ╣αñ╛αñÑ',
       subtext: 'Cardiovascular Radiation',
+      subtext_hi: 'αñ╣αÑâαñªαñ» αñÿαñ╛αññ αñòαÑç αñ½αÑêαñ▓αñ¿αÑç αñ╡αñ╛αñ▓αÑç αñ▓αñòαÑìαñ╖αñú',
       category: 'chest_pain',
       x: 62, y: 36,
       zoomClass: 'scale-[1.75] translate-y-[2%]',
@@ -50,7 +60,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'chest_right',
       label: 'Right Chest / Lungs',
+      label_hi: 'αñªαñ╛αñ»αñ╛αñé αñ╕αÑÇαñ¿αñ╛ / αñ½αÑçαñ½αñíαñ╝αÑç',
       subtext: 'Respiration, Pleuritic Pain',
+      subtext_hi: 'αñ╕αñ╛αñéαñ╕ αñ▓αÑçαñ¿αÑç αñ«αÑçαñé αñªαñ░αÑìαñª, αñ½αÑçαñ½αñíαñ╝αÑç',
       category: 'respiratory',
       x: 38, y: 36,
       zoomClass: 'scale-[1.75] translate-y-[2%]',
@@ -60,7 +72,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'abdomen_upper',
       label: 'Upper Abdomen / Stomach',
+      label_hi: 'αñèαñ¬αñ░αÑÇ αñ¬αÑçαñƒ / αñàαñ«αñ╛αñ╢αñ»',
       subtext: 'Stomach, Liver, Acidity',
+      subtext_hi: 'αñÅαñ╕αñ┐αñíαñ┐αñƒαÑÇ, αñ¿αñ╛αñ¡αñ┐ αñ£αñ▓αñ¿, αñ»αñòαÑâαññ',
       category: 'abdominal',
       x: 50, y: 48,
       zoomClass: 'scale-[1.7] translate-y-[-10%]',
@@ -70,7 +84,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'abdomen_lower',
       label: 'Lower Abdomen / Pelvis',
+      label_hi: 'αñ¿αñ┐αñÜαñ▓αñ╛ αñ¬αÑçαñƒ / αñ¬αÑçαñ▓αÑìαñ╡αñ┐αñ╕',
       subtext: 'Intestines, Urinary, Cramps',
+      subtext_hi: 'αñåαñéαññαÑïαñé αñ«αÑçαñé αñÉαñéαñáαñ¿, αñ¬αÑçαñ╢αñ╛αñ¼ αñ«αÑçαñé αñ£αñ▓αñ¿',
       category: 'abdominal',
       x: 50, y: 60,
       zoomClass: 'scale-[1.7] translate-y-[-20%]',
@@ -80,7 +96,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'joints_limbs',
       label: 'Joints, Arms & Knees',
+      label_hi: 'αñ£αÑïαñíαñ╝, αñ╣αñ╛αñÑ αñÅαñ╡αñé αñÿαÑüαñƒαñ¿αÑç',
       subtext: 'Arthritis, Muscle Stiffness',
+      subtext_hi: 'αñùαñáαñ┐αñ»αñ╛, αñ«αñ╛αñéαñ╕αñ¬αÑçαñ╢αñ┐αñ»αÑïαñé αñ«αÑçαñé αñàαñòαñíαñ╝αñ¿',
       category: 'routine_checkup',
       x: 25, y: 78,
       zoomClass: 'scale-[1.5] translate-y-[-32%]',
@@ -90,7 +108,9 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
     {
       id: 'back_lumbar',
       label: 'Spine & Lower Back',
+      label_hi: 'αñ░αÑÇαñóαñ╝ αñòαÑÇ αñ╣αñíαÑìαñíαÑÇ αñÅαñ╡αñé αñ¬αÑÇαñá',
       subtext: 'Lumbar, Sciatica, Kidney',
+      subtext_hi: 'αñòαñ«αñ░ αñªαñ░αÑìαñª, αñ╕αñ╛αñçαñƒαñ┐αñòαñ╛, αñùαÑüαñ░αÑìαñªαñ╛',
       category: 'routine_checkup',
       x: 50, y: 52,
       zoomClass: 'scale-[1.7] translate-y-[-12%]',
@@ -124,15 +144,15 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
           </span>
           <div>
             <h4 className="font-extrabold text-sm text-slate-100 flex items-center gap-2">
-              Pictorial Anatomical Body Map & Graphical Zoom
+              {t('bodyMap.title')}
               {activeZone && (
                 <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 font-mono text-[10px] uppercase border border-teal-500/40 animate-pulse">
-                  🔍 ZOOMED: {activeZone.label.toUpperCase()}
+                  ≡ƒöì ZOOMED: {t(`bodyMap.zones.${activeZone.id}.label`, activeZone.label).toUpperCase()}
                 </span>
               )}
             </h4>
             <p className="text-xs text-slate-400">
-              Tap any body region to zoom in and launch target decision cards below
+              {t('bodyMap.subtitle')}
             </p>
           </div>
         </div>
@@ -142,28 +162,28 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
           {selectedSite && (
             <button
               onClick={() => onSelectSite('')}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1 cursor-pointer"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Reset Zoom
+              <RefreshCw className="w-3.5 h-3.5" /> {t('bodyMap.views.reset')}
             </button>
           )}
 
           <div className="flex items-center p-1 bg-slate-900 rounded-xl border border-slate-800 text-xs">
             <button
               onClick={() => setViewAngle('front')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 viewAngle === 'front' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Front View
+              {t('bodyMap.views.front')}
             </button>
             <button
               onClick={() => setViewAngle('back')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 viewAngle === 'back' ? 'bg-teal-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Back View
+              {t('bodyMap.views.back')}
             </button>
           </div>
         </div>
@@ -264,8 +284,8 @@ export default function VisualBodyMap({ selectedSite, onSelectSite, onSelectCate
                       {zone.icon === 'User' && <User className="w-5 h-5 stroke-[2.5]" />}
                     </div>
                     <div>
-                      <h5 className="font-extrabold text-xs text-slate-100">{zone.label}</h5>
-                      <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{zone.subtext}</p>
+                      <h5 className="font-extrabold text-xs text-slate-100">{t(`bodyMap.zones.${zone.id}.label`, zone.label)}</h5>
+                      <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{t(`bodyMap.zones.${zone.id}.subtext`, zone.subtext)}</p>
                     </div>
                   </div>
 

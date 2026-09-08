@@ -1,11 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { 
   Camera, FileText, Upload, Sparkles, RefreshCw, CheckCircle2, 
   ShieldCheck, Tag, Video, VideoOff, Aperture, RotateCcw, AlertCircle, Edit3, Play
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { SAMPLE_OCR_TEMPLATES, ocrEngine } from '../services/ocrEngine';
 
-export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
+export default function VisualDocumentScanner({ scannedDoc, onDocScan, language = 'hi' }) {
+  const { t } = useTranslation();
   // Input Modes: 'webcam' | 'upload' | 'preset' | 'text'
   const [scanMode, setScanMode] = useState('webcam');
   const [isScanning, setIsScanning] = useState(false);
@@ -31,11 +33,7 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
       try {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           const stream = await navigator.mediaDevices.getUserMedia({
-            // Handwriting needs resolution. At 1280x720 a full A5 prescription leaves
-            // roughly 20px of glyph height, which is where Tesseract starts inventing
-            // characters ("Augmentin" -> "Augmestin", "tid" -> "hid"). Ask for 1920 and
-            // let the browser fall back if the device cannot do it.
-            video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
             audio: false
           });
           streamInstance = stream;
@@ -76,9 +74,7 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Default toDataURL quality is 0.92 but re-encoding a document photo softens the
-    // thin strokes OCR depends on. 0.98 costs a few hundred KB and keeps them.
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
+    const dataUrl = canvas.toDataURL('image/jpeg');
     setCapturedImage(dataUrl);
 
     // Stop camera stream after capture
@@ -249,11 +245,7 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
                   autoPlay
                   playsInline
                   muted
-                  /* object-cover CROPS the preview to fill the frame, so the guide box
-                     showed a tighter view than the camera actually captures — you frame
-                     the paper to what you can see and the edges land outside it.
-                     object-contain makes the preview what-you-see-is-what-you-get. */
-                  className="w-full h-full object-contain rounded-xl"
+                  className="w-full h-full object-cover rounded-xl"
                 />
                 {!isCameraActive && (
                   <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-4 text-center space-y-2 z-10">
@@ -388,7 +380,7 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[11px] font-mono font-bold">
-                    ⚡ {scannedDoc.confidenceScore || 90}% AI Confidence
+                    ΓÜí {scannedDoc.confidenceScore || 90}% AI Confidence
                   </span>
                   <span className="text-xs text-slate-400 font-mono">Date: {scannedDoc.date}</span>
                 </div>
@@ -398,7 +390,7 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
               {scannedDoc.vitalsFromDoc && Object.keys(scannedDoc.vitalsFromDoc).length > 0 && (
                 <div className="space-y-2 p-3 bg-teal-950/30 border border-teal-500/20 rounded-xl">
                   <span className="text-xs font-bold text-teal-300 uppercase tracking-wider block flex items-center gap-1.5">
-                    🩺 Extracted Vitals (Written on Document)
+                    ≡ƒ⌐║ Extracted Vitals (Written on Document)
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                     {scannedDoc.vitalsFromDoc.blood_pressure && (
@@ -438,7 +430,7 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
                   <div className="space-y-1.5">
                     {scannedDoc.clinicalNotes.map((note, idx) => (
                       <div key={idx} className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 font-medium">
-                        📝 {note}
+                        ≡ƒô¥ {note}
                       </div>
                     ))}
                   </div>
@@ -456,7 +448,7 @@ export default function VisualDocumentScanner({ scannedDoc, onDocScan }) {
                       <div key={idx} className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-2.5">
                           <span className="p-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold text-xs">
-                            💊
+                            ≡ƒÆè
                           </span>
                           <div>
                             <span className="font-bold text-slate-100">{m.name} {m.dosage}</span>
